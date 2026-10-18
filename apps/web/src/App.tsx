@@ -33,13 +33,15 @@ export default function App() {
   const mutation = useMutation({onError:()=>{void queryClient.invalidateQueries({queryKey:['state']});},mutationFn:({path,body}:{path:string;body?:unknown})=>mutateState(path,body),onSuccess:(state,variables)=>{
     queryClient.setQueryData(['state'],state); void queryClient.invalidateQueries({queryKey:['films']});
     if(variables.path.includes('/generate') || variables.path === '/api/events') ui.setSelectedVersionId(newest(state.versions)?.id ?? null);
-    if(variables.path === '/api/demo/reset') {ui.setSelectedVersionId(null);ui.setMode('DEMO');ui.setSurface('programme');ui.closeEvidence();}
+    if(variables.path === '/api/demo/reset') {ui.setSelectedVersionId(null);useWorkstation.setState({modeChosen:false});ui.adoptDefaultMode(stateQuery.data?.providerStatus.defaultMode ?? 'DEMO');ui.setSurface('programme');ui.closeEvidence();}
     if(variables.path === '/api/events') {ui.setSurface('repair');setWithdrawFilm(null);}
     const message = variables.path.includes('/approve') ? 'Programme approved. Your version and evidence are preserved.' : variables.path === '/api/events' ? 'Rights change recorded. Review the repair before approving.' : variables.path === '/api/demo/reset' ? 'Demo reset. Start with a clean slate.' : variables.path.includes('/cohorts/') ? 'Cohort updated. Earlier programmes must be regenerated.' : variables.path === '/api/evaluations' ? 'Evaluation complete. Only available evidence was compared.' : 'Programme generated. Review the evidence before approving.';
     ui.setToast(message); setConfirmReset(false);
   }});
   useEffect(()=>{if(!ui.toast)return;const id=setTimeout(()=>ui.setToast(null),5000);return()=>clearTimeout(id);},[ui.toast,ui.setToast]);
   const state = stateQuery.data;
+  const defaultMode = state?.providerStatus.defaultMode;
+  useEffect(()=>{if(defaultMode)ui.adoptDefaultMode(defaultMode);},[defaultMode,ui.adoptDefaultMode]);
   if(!state) return <div className="loading-screen"><div className="loading-content"><div className="brand-mark" style={{margin:'auto'}}/><h1>Rights &amp; Resonance</h1>{stateQuery.isError?<><p>We couldn’t reach the programming server. Your workspace hasn’t been changed.</p><p>{stateQuery.error.message}</p><button className="button primary" onClick={()=>void stateQuery.refetch()}><RefreshCw size={14}/>Try again</button></>:<><p>Opening your programming workstation</p><LoaderCircle className="spinner" size={20}/></>}</div></div>;
   const version = state.versions.find(v=>v.id===ui.selectedVersionId) ?? newest(state.versions);
   const isStale = !!version && version.status === 'DRAFT' && version.inputRevision !== state.revision;
