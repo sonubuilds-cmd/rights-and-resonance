@@ -116,14 +116,16 @@ export async function runProbe(client: QlooClient, overrides: ProbeOverrides = {
     for (let i = 0; i < report.profiles.length; i++) for (let j = i + 1; j < report.profiles.length; j++) {
       const a = report.profiles[i]!; const b = report.profiles[j]!;
       const aRows = a.result!.rows; const bRows = b.result!.rows;
-      const bById = new Map(bRows.map(row => [row.entityId, row.percentile!]));
-      const mean = aRows.reduce((total, row) => total + Math.abs(row.percentile! - bById.get(row.entityId)!), 0) / aRows.length;
-      const topFive = (rows: typeof aRows) => rows.slice().sort((x, y) => y.percentile! - x.percentile! || x.entityId.localeCompare(y.entityId)).slice(0, 5).map(x => x.entityId).sort().join(',');
+      // Seed films have no affinity in their own cohort (null, not 0); compare only films ranked in both cohorts.
+      const bById = new Map(bRows.filter(row => row.percentile !== null).map(row => [row.entityId, row.percentile!]));
+      const shared = aRows.filter(row => row.percentile !== null && bById.has(row.entityId));
+      const mean = shared.reduce((total, row) => total + Math.abs(row.percentile! - bById.get(row.entityId)!), 0) / shared.length;
+      const topFive = (rows: typeof aRows) => rows.filter(row => row.percentile !== null).sort((x, y) => y.percentile! - x.percentile! || x.entityId.localeCompare(y.entityId)).slice(0, 5).map(x => x.entityId).sort().join(',');
       const differentTopFive = topFive(aRows) !== topFive(bRows);
       report.comparisons.push({ cohortA: a.cohortId, cohortB: b.cohortId, meanAbsolutePercentileDifference: mean, differentTopFive, useful: differentTopFive && mean >= 0.05 });
     }
   }
-  report.gates.usefulDifferentProfiles = report.gates.completeThreeProfiles && report.comparisons.length === 3 && report.comparisons.every(c => c.useful) && report.profiles.every(p => new Set(p.result!.rows.map(r => r.rawAffinity)).size >= 5);
+  report.gates.usefulDifferentProfiles = report.gates.completeThreeProfiles && report.comparisons.length === 3 && report.comparisons.every(c => c.useful) && report.profiles.every(p => new Set(p.result!.rows.flatMap(r => r.rawAffinity === null ? [] : [r.rawAffinity])).size >= 5);
   report.status = Object.values(report.gates).every(Boolean) ? 'PASS' : 'FAIL';
   report.reason = report.status === 'PASS' ? 'Live feasibility gates passed for the explicitly listed mapped candidate universe. Review raw evidence and outstanding mappings before production use.' : 'At least one live feasibility gate failed. Review mappings, unknown values, profile coverage, and errors. Do not claim live feasibility is proven.';
   return report;
@@ -162,7 +164,9 @@ async function main() {
   const argument = process.argv.indexOf('--overrides');
   const overridePath = argument >= 0 ? process.argv[argument + 1] : undefined;
   if (argument >= 0 && !overridePath) throw new Error('--overrides requires a JSON path');
-  const overrides: ProbeOverrides = overridePath ? JSON.parse(await readFile(resolve(overridePath), 'utf8')) : {};
+  const confirmed = JSON.parse(await readFile(new URL('../packages/qloo/fixtures/confirmed-mappings.json', import.meta.url), 'utf8')) as ProbeOverrides;
+  const extra: ProbeOverrides = overridePath ? JSON.parse(await readFile(resolve(overridePath), 'utf8')) : {};
+  const overrides: ProbeOverrides = { films: { ...confirmed.films, ...extra.films }, seeds: { ...confirmed.seeds, ...extra.seeds } };
   const client = new QlooClient({ apiKey: process.env.QLOO_API_KEY, baseUrl: process.env.QLOO_BASE_URL, transport: process.env.QLOO_TRANSPORT,
     ...(process.env.QLOO_RETRY_BUDGET_MS ? { retryBudgetMs: Number(process.env.QLOO_RETRY_BUDGET_MS) } : {}),
     ...(process.env.QLOO_TIMEOUT_MS ? { timeoutMs: Number(process.env.QLOO_TIMEOUT_MS) } : {}),

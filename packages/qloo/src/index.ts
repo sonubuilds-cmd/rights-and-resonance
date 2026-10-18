@@ -34,7 +34,9 @@ export type QlooResult = {
   status: 'complete' | 'partial' | 'unknown'; entities: QlooEntity[]; raw: unknown;
   evidence: QlooEvidence; warnings: string[];
 };
-export type RankedAffinity = { entityId: string; rawAffinity: number | null; percentile: number | null; explainability?: unknown };
+export type RankedAffinity = { entityId: string; rawAffinity: number | null; percentile: number | null; explainability?: unknown;
+  /** True when this film is itself a cohort seed: Qloo never recommends a seed back, so its affinity is unknown (null), never 0. */
+  excludedAsSeed?: boolean };
 export type QlooInsightsResult = QlooResult & {
   rows: RankedAffinity[]; candidateUniverse: string[]; missingEntityIds: string[]; complete: boolean;
   aggregateExplainability?: unknown;
@@ -86,7 +88,10 @@ function boundedInteger(value: number, low: number, high: number, name: string):
 /** Parse only explicit supported fields. The original response and entity are always retained. */
 export function parseQlooEntities(raw: unknown, endpoint: QlooEvidence['endpoint']): Pick<QlooResult, 'entities' | 'status' | 'warnings'> {
   const warnings: string[] = [];
-  if (!record(raw) || raw.success !== true) return { entities: [], status: 'unknown', warnings: ['Response did not affirm success'] };
+  // Live /search and /entities (via harness 0.1.26) return a bare {results:[...]} with no `success` key; /v2/insights
+  // returns success:true. An explicit success:false, or a non-object, is never accepted.
+  if (!record(raw) || raw.success === false || (raw.success !== true && !Array.isArray(raw.results) && !record(raw.results))) return { entities: [], status: 'unknown', warnings: ['Response did not affirm success'] };
+  if (raw.success !== true && endpoint === '/v2/insights') return { entities: [], status: 'unknown', warnings: ['Response did not affirm success'] };
   const container = endpoint === '/v2/insights' && record(raw.results) ? raw.results.entities : raw.results;
   if (!Array.isArray(container)) return { entities: [], status: 'unknown', warnings: ['Unrecognized response envelope; inspect retained raw evidence'] };
   const entities: QlooEntity[] = [];
@@ -119,7 +124,7 @@ export function parseQlooEntities(raw: unknown, endpoint: QlooEvidence['endpoint
 }
 
 /** Midrank percentile, 0 = lowest, 1 = highest, ties share a rank. No partial-universe normalization. */
-export function normalizeFixedUniverse(entities: ReadonlyArray<Pick<QlooEntity, 'entityId' | 'rawAffinity' | 'explainability'>>, candidateEntityIds: string[]): {
+export function normalizeFixedUniverse(entities: ReadonlyArray<Pick<QlooEntity, 'entityId' | 'rawAffinity' | 'explainability'>>, candidateEntityIds: string[], seedEntityIds: readonly string[] = []): {
   rows: RankedAffinity[]; complete: boolean; missingEntityIds: string[]; candidateUniverse: string[];
 } {
   const universe = ids(candidateEntityIds, 'Candidate universe').sort();
@@ -131,15 +136,19 @@ export function normalizeFixedUniverse(entities: ReadonlyArray<Pick<QlooEntity, 
     if (!universeSet.has(key) || byId.has(key)) invalidRows = true;
     else byId.set(key, entity);
   }
-  const missingEntityIds = universe.filter(id => !score(byId.get(id)?.rawAffinity));
-  const complete = missingEntityIds.length === 0 && !invalidRows;
-  const values = complete ? universe.map(id => byId.get(id)!.rawAffinity as number).sort((a, b) => a - b) : [];
+  // Observed live: /v2/insights omits the signal (seed) entities from its results. A candidate that is also a seed is
+  // therefore expected to be absent; it stays in the universe with null affinity and is excluded from percentile ranking.
+  const seedSet = new Set(seedEntityIds.map(id => id.toLowerCase()));
+  const missing = universe.filter(id => !score(byId.get(id)?.rawAffinity));
+  const missingEntityIds = missing.filter(id => !seedSet.has(id));
+  const complete = missingEntityIds.length === 0 && !invalidRows && missing.length < universe.length;
+  const values = complete ? universe.filter(id => !missing.includes(id)).map(id => byId.get(id)!.rawAffinity as number).sort((a, b) => a - b) : [];
   const rows = universe.map(entityId => {
     const item = byId.get(entityId);
     const rawAffinity = score(item?.rawAffinity) ? item.rawAffinity : null;
     const percentile = complete && rawAffinity !== null ? values.length === 1 ? 0.5 :
       (values.indexOf(rawAffinity) + values.lastIndexOf(rawAffinity)) / 2 / (values.length - 1) : null;
-    return { entityId, rawAffinity, percentile, ...(item && Object.hasOwn(item, 'explainability') ? { explainability: item.explainability } : {}) };
+    return { entityId, rawAffinity, percentile, ...(rawAffinity === null && seedSet.has(entityId) ? { excludedAsSeed: true } : {}), ...(item && Object.hasOwn(item, 'explainability') ? { explainability: item.explainability } : {}) };
   });
   return { rows, complete, missingEntityIds, candidateUniverse: universe };
 }
@@ -239,7 +248,7 @@ export class QlooClient {
     });
     result.evidence.candidateUniverseHash = hashEvidence(universe);
     const valid = result.entities.filter(e => e.type === 'urn:entity:movie');
-    const ranked = normalizeFixedUniverse(valid, universe);
+    const ranked = normalizeFixedUniverse(valid, universe, seeds);
     const complete = result.status === 'complete' && valid.length === result.entities.length && ranked.complete;
     if (!complete) {
       ranked.rows.forEach(row => { row.percentile = null; });

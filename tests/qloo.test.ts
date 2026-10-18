@@ -68,6 +68,18 @@ describe('Qloo adapter using synthetic contract fixtures (NOT live responses)', 
   it('treats malformed row as incomplete and never silently drops it as successful', () => {
     expect(parseQlooEntities({success:true,results:[null]}, '/search').status).toBe('partial');
   });
+  it('accepts the bare {results:[...]} envelope the live /search returns, but never success:false', () => {
+    const row = { name: 'Aftersun', entity_id: id(1), types: ['urn:entity:movie'], properties: { release_year: 2022 }, popularity: 0.9, tags: [{ id: 'urn:tag:x', name: 'X', type: 'urn:tag' }] };
+    const ok = parseQlooEntities({ results: [row] }, '/search');
+    expect(ok.status).toBe('complete'); expect(ok.entities[0]).toMatchObject({ type: 'urn:entity:movie', releaseYear: 2022, rawAffinity: null });
+    expect(parseQlooEntities({ success: false, results: [row] }, '/search').status).toBe('unknown');
+    expect(parseQlooEntities({ results: { entities: [row] } }, '/v2/insights').status).toBe('unknown');
+  });
+  it('keeps a seed film in the universe with null affinity because Qloo omits seeds from its own results', () => {
+    const r = normalizeFixedUniverse([{entityId:id(1),rawAffinity:0.2},{entityId:id(2),rawAffinity:0.9}],[id(1),id(2),id(3)],[id(3)]);
+    expect(r.complete).toBe(true); expect(r.rows.map(x=>x.percentile)).toEqual([0,1,null]); expect(r.rows[2]).toMatchObject({rawAffinity:null,excludedAsSeed:true});
+    expect(normalizeFixedUniverse([{entityId:id(1),rawAffinity:0.2}],[id(1),id(2),id(3)],[id(3)]).complete).toBe(false);
+  });
   it('uses tied midranks over the exact fixed universe independent of response order', () => {
     const entities = [{entityId:id(1),rawAffinity:0.2},{entityId:id(2),rawAffinity:0.2},{entityId:id(3),rawAffinity:0.9}];
     expect(normalizeFixedUniverse(entities.reverse(),[id(1),id(2),id(3)]).rows.map(r=>r.percentile)).toEqual([0.25,0.25,1]);

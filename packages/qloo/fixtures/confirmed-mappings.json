@@ -1,0 +1,12 @@
+{
+  "_note": "Manually reviewed 2026-10-18 against live /search results (name, release year, director and type checked). Used by scripts/qloo-probe.ts as explicit manual confirmation; each ID is still re-verified through /entities at probe time. Where Qloo holds duplicate records, the record with the matching year, director and highest popularity was chosen.",
+  "films": {
+    "aftersun": "8481af5b-82df-42b7-9900-371eafba56fb",
+    "akira": "0e84f600-b861-4a93-ac5e-6e1df4ac5826",
+    "totoro": "e146ca3a-10fd-4c7f-acfa-ad4e9955f08e"
+  },
+  "seeds": {
+    "film-society:Normal People": "28d688c4-0760-4042-bec1-f6ee75e71cc7",
+    "alternative-music:Just Kids": "7a5f59c6-ce09-462c-8f6a-3d7ef6328f8b"
+  }
+}

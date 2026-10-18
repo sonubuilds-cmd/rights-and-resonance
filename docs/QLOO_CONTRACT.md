@@ -99,3 +99,14 @@ The fourth criterion is a transparent project heuristic for useful differentiati
 ## Contract checks
 
 `pnpm exec vitest run tests/qloo.test.ts` exercises the request allowlist, header, origin guard, parsing variants, absent explainability, partial/unknown/extra entities, midranks, ambiguity, retries, timeouts, safe errors, cache provenance/expiry and no-key probe. Fixtures live in `packages/qloo/fixtures/synthetic-contract.json`, visibly labelled synthetic. Live gate success must come from the probe with a legitimately configured key, not these tests.
+
+## Observed live result (2026-10-18, official harness 0.1.26, hackathon base URL)
+
+All four gates **PASS** in one `pnpm probe` run: 30/30 films mapped, 9/9 seeds resolved, three complete profiles over the same 30-film universe, pairwise mean absolute percentile differences 0.29 / 0.32 / 0.15 with different top-five sets. This is feasibility evidence for this catalogue and these seeds only, not an attendance forecast. Roughly 45 provider calls per full probe run (30 film searches, 9 seed searches, 5 `/entities` confirmations, 3 insights requests, minus cache hits).
+
+Observed shapes that differ from the earlier synthetic fixtures:
+
+- `/search` (and `/entities`) return a bare `{"results":[...]}` with **no `success` key**. Each row has `name`, `entity_id` (upper-case UUID), `types` (array, e.g. `["urn:entity:movie"]`), `properties` (includes `release_year`), `popularity`, `disambiguation` (year plus director/author), and `tags` (`{id,name,type}`). The parser accepts a missing `success` key for these endpoints, still rejects `success:false`, and still requires `success:true` for `/v2/insights`.
+- `/v2/insights` returns `{success:true, results:{entities:[...]}, query:{explainability:{...}}}`. Rows use `type:"urn:entity"` with the real type in `subtype`, `query.affinity` (0-1), `query.measurements`, per-entity `query.explainability["signal.interests.entities"]` (`[{entity_id,score}]`), plus `popularity`, `tags`, `properties`, `disambiguation`.
+- **Qloo omits the signal (seed) entities from insights results.** A film that is also a cohort seed (In the Mood for Love, Blade Runner) is absent from that cohort's response. The adapter keeps it in the fixed universe with `rawAffinity: null`, `percentile: null`, `excludedAsSeed: true`; it is never scored as 0, and percentiles are computed over the remaining films. Any other missing film still makes the profile incomplete.
+- Duplicate catalogue records exist (e.g. two 2022 "Aftersun", two "Just Kids" books). Auto-mapping correctly refuses these; they are resolved by the manually reviewed `packages/qloo/fixtures/confirmed-mappings.json` (Aftersun, Akira, My Neighbour Totoro, and the Normal People and Just Kids seeds), which `pnpm probe` loads automatically and re-verifies through `/entities`.
