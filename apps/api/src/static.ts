@@ -22,10 +22,10 @@ export function resolveWebRoot(env: NodeJS.ProcessEnv = process.env): string | n
   return root;
 }
 
-/** True for requests the static handler owns (everything except the API and health check). */
+/** True for requests the static handler owns (everything except the API, MCP endpoint and health check). */
 export function isWebPath(url: string): boolean {
   const path = url.split('?')[0] ?? '/';
-  return !(path === '/api' || path.startsWith('/api/') || path === '/healthz');
+  return !(path === '/api' || path.startsWith('/api/') || path === '/healthz' || path === '/mcp');
 }
 
 function safeFile(root: string, urlPath: string): string | null {

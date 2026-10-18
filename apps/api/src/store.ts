@@ -45,6 +45,8 @@ export class MemoryStore implements StateStore {
       return state;
     });
   }
+  /** Drop a session's workspace (used by bounded MCP session expiry). */
+  discard(id: string) { this.states.delete(id); this.locks.delete(id); }
   async close() {}
 }
 export class PostgresStore implements StateStore {

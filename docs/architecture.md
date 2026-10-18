@@ -33,6 +33,10 @@ Fastify API: session boundary, input validation, change events, approval, export
 
 `packages/domain` owns Zod schemas, integer-pence money, ISO timestamps and fresh-copy demo fixtures. `packages/solver` owns normalisation, feasibility checks, optimisation and repair comparison. `packages/qloo` owns request mechanics and provider evidence. Its default transport runs the official pinned harness in a bounded server-side child; an explicit direct-HTTP compatibility mode never becomes an automatic fallback. Both are restricted to the hackathon origin. See [hackathon alignment](hackathon-alignment.md). `apps/api` owns session-level state, orchestration, lifecycle decisions and exports. `apps/web` renders the API state; TanStack Query handles server requests and Zustand handles local workstation UI choices.
 
+### Agent access (MCP)
+
+`apps/api/src/agent-tools.ts` is a transport-agnostic tool registry (zod input schemas, LLM-oriented descriptions) that calls the same workflow and state-transition functions as the REST routes (`operations.ts`, `workflow.ts`) against a given session's workspace. The MCP server (`mcp-server.ts`) exposes it over Streamable HTTP at `/mcp` (one isolated in-memory workspace per MCP session, bounded and expiring) and over stdio (`pnpm --silent mcp`). An in-app agent can call the same registry. See [mcp.md](mcp.md).
+
 ## The optimiser
 
 The production path in this prototype is an actual exhaustive deterministic solver, not a fixed returned slate or model-picked answer. The implementation is intentionally bounded to at most 30 films, four slots and three cohorts. The supplied fixture uses three cohorts. It validates input structure before searching and returns a complete feasible slate or an explicit failure; it does not quietly return fewer screenings.

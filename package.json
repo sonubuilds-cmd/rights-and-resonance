@@ -14,22 +14,24 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "pnpm --filter @rr/web test:e2e",
+    "mcp": "node --env-file-if-exists=.env --import tsx apps/api/src/mcp-stdio.ts",
     "probe": "node --env-file-if-exists=.env --import tsx scripts/qloo-probe.ts",
     "seed": "node --env-file-if-exists=.env --import tsx scripts/seed-demo.ts",
     "test:http": "node --import tsx scripts/demo-smoke.ts"
   },
   "devDependencies": {
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "@playwright/test": "^1.51.0",
+    "@rr/domain": "workspace:*",
+    "@rr/qloo": "workspace:*",
+    "@rr/solver": "workspace:*",
     "@types/node": "^22.10.0",
     "@types/pg": "^8.11.10",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "@playwright/test": "^1.51.0",
     "concurrently": "^9.1.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",
-    "vitest": "^3.0.0",
-    "@rr/domain": "workspace:*",
-    "@rr/solver": "workspace:*",
-    "@rr/qloo": "workspace:*"
+    "vitest": "^3.0.0"
   }
 }

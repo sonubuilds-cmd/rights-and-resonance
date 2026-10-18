@@ -36,6 +36,20 @@ Each browser gets an isolated anonymous demo session. With no `DATABASE_URL`, st
 
 The [demo script](docs/demo-script.md) walks through the presentation. See [architecture](docs/architecture.md) for the model and workflow and [deployment](docs/deployment.md) for hosting setup.
 
+## Use it from an agent (MCP)
+
+Rights & Resonance is also an **agentic tool**: it runs as a [Model Context Protocol](https://modelcontextprotocol.io) server, so Claude Code, Claude Desktop or any MCP client can drive the same Qloo-backed workflow (taste data, constrained solver, explanations, rights-change repair). Each connection gets its own isolated demo workspace, and approval stays a human decision.
+
+```bash
+# Remote (the deployed app, or http://localhost:3001/mcp while running pnpm dev)
+claude mcp add --transport http rights-resonance https://rights-and-resonance.onrender.com/mcp
+
+# Local stdio, from a clone of this repo
+claude mcp add rights-resonance -- pnpm --silent --dir "$PWD" mcp
+```
+
+Then ask: *Plan a two-night season at the Lantern for our three audiences, explain each pick with Qloo themes, then tell me what happens if the rights to Her fall through.* The web app's **Agent access** page has copy-ready snippets. Ten tools and two prompts, guardrails and server limits are documented in [docs/mcp.md](docs/mcp.md).
+
 ## Evidence modes
 
 - **DEMO:** complete, explicitly synthetic affinity matrix and rights ledger. Useful for exercising the actual optimiser and workflow without network calls.

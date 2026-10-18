@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-export type Surface = 'programme' | 'taste' | 'cohorts' | 'catalogue' | 'coverage' | 'repair' | 'evaluation';
+export type Surface = 'programme' | 'taste' | 'cohorts' | 'catalogue' | 'coverage' | 'repair' | 'evaluation' | 'agent';
 export type Mode = 'DEMO' | 'QLOO' | 'METADATA' | 'LLM_ONLY';
 type WorkstationStore = {
   surface: Surface; setSurface: (value: Surface) => void;

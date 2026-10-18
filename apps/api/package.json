@@ -8,16 +8,17 @@
     "start": "tsx --env-file-if-exists=../../.env src/index.ts"
   },
   "dependencies": {
+    "@fastify/cookie": "^11.0.0",
+    "@fastify/cors": "^10.0.0",
+    "@fastify/rate-limit": "^10.2.0",
+    "@langchain/core": "^0.3.0",
+    "@langchain/langgraph": "^0.2.60",
+    "@modelcontextprotocol/sdk": "1.32.1",
     "@rr/domain": "workspace:*",
-    "@rr/solver": "workspace:*",
     "@rr/qloo": "workspace:*",
     "@rr/shared": "workspace:*",
+    "@rr/solver": "workspace:*",
     "fastify": "^5.2.0",
-    "@fastify/cors": "^10.0.0",
-    "@fastify/cookie": "^11.0.0",
-    "@fastify/rate-limit": "^10.2.0",
-    "@langchain/langgraph": "^0.2.60",
-    "@langchain/core": "^0.3.0",
     "pg": "^8.13.0",
     "zod": "^3.24.0"
   },

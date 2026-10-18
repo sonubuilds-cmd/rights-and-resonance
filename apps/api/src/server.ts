@@ -11,12 +11,13 @@ import { QlooError } from '@rr/qloo';
 import { MemoryStore, PostgresStore, type StateStore } from './store.js';
 import { createInitialState, currentProviderConfiguration, defaultEvidenceMode } from './state.js';
 import { generateProgramme, currentViolations } from './workflow.js';
+import { ApiError, applyChange, approveVersion, findVersion, getCohort, getFilm, rightsEnquiryText } from './operations.js';
 import { createTasteSource, type TasteDnaSource } from './taste.js';
 import { collectAffinities, qloo, recordEvidence, EvidenceCollectionError } from './evidence.js';
+import { registerMcpRoutes, isMcpPath } from './mcp-http.js';
 import { registerWebHost, resolveWebRoot, isWebPath } from './static.js';
 import type { AppState, ProgrammeEvent, ProgrammeVersion, EvidenceMode } from './types.js';
 
-class ApiError extends Error { constructor(readonly statusCode: number, readonly code: string, message: string, readonly details?: unknown) { super(message); } }
 const idSchema=z.string().min(1).max(120);
 const seedSchema=z.array(CohortSeedSchema.extend({entityId:z.string().uuid().nullable().optional()})).min(2).max(12);
 const cohortPatch=z.object({name:z.string().min(1).max(160).optional(),description:z.string().min(1).max(2000).optional(),seeds:seedSchema.optional()}).strict();
@@ -43,38 +44,15 @@ async function validateSeedMappings(seeds:z.infer<typeof seedSchema>|undefined) 
 }
 const clone=<T>(value:T):T=>structuredClone(value);
 const now=()=>new Date().toISOString();
-function findVersion(s:AppState,id:string) {const value=s.versions.find(v=>v.id===id);if(!value)throw new ApiError(404,'NOT_FOUND','Programme version not found in this session');return value;}
-function getFilm(s:AppState,id:string) {const film=s.films.find(f=>f.id===id);if(!film)throw new ApiError(404,'NOT_FOUND','Film not found');return film;}
-function getCohort(s:AppState,id:string) {const cohort=s.cohorts.find(c=>c.id===id);if(!cohort)throw new ApiError(404,'NOT_FOUND','Cohort not found');return cohort;}
 function bodyObject(req:FastifyRequest):Record<string,unknown> {return z.record(z.unknown()).parse(req.body ?? {});}
 function sessionId(req:FastifyRequest) {return (req as FastifyRequest & {rrSession:string}).rrSession;}
 function param(req:FastifyRequest,key:string) {return z.record(idSchema).parse(req.params)[key]!;}
-
-/** Commit event and invalidation even when repair is infeasible. No approved item is edited. */
-async function applyChange(state:AppState,type:string,payload:Record<string,unknown>,mutate:()=>void,forceEvidenceInvalidation=false) {
-  const parent=[...state.versions].reverse().find(v=>v.status==='APPROVED') ?? state.versions.at(-1);
-  mutate();state.revision++;
-  const event:ProgrammeEvent={id:randomUUID(),createdAt:now(),type,payload,invalidatedVersionIds:[]};state.events.push(event);
-  for(const version of state.versions.filter(v=>v.status==='APPROVED')) {
-    const violations=currentViolations(state,version);
-    if(forceEvidenceInvalidation || violations.length) {
-      version.status='INVALIDATED';version.invalidatedAt=now();version.invalidationReason=forceEvidenceInvalidation ? `${type}: cohort or mapping evidence changed; human review required.` : violations.join('; ');
-      event.invalidatedVersionIds.push(version.id);
-    }
-  }
-  if(parent && (forceEvidenceInvalidation || currentViolations(state,parent).length>0)) {
-    const repaired=await generateProgramme(state,parent.mode,{parent,trigger:'REPAIR',repairPolicy:'MINIMAL_CHANGE'});
-    if(repaired.version)event.repairedVersionId=repaired.version.id;
-    else event.repairError=repaired.error;
-  }
-  return state;
-}
 
 export async function makeServer(options:{store?:StateStore;logger?:boolean;taste?:TasteDnaSource}={}) {
   const app=Fastify({logger:options.logger ?? false,bodyLimit:256*1024,trustProxy:false});
   const allowed=new Set((process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173,http://localhost:3001,http://127.0.0.1:5173,http://127.0.0.1:3001').split(',').map(s=>s.trim()).filter(Boolean));
   await app.register(cookie);
-  await app.register(cors,{origin:(origin,cb)=>cb(null,!origin||allowed.has(origin)),credentials:true,methods:['GET','POST','PUT','PATCH','OPTIONS']});
+  await app.register(cors,{origin:(origin,cb)=>cb(null,!origin||allowed.has(origin)),credentials:true,methods:['GET','POST','PUT','PATCH','DELETE','OPTIONS'],exposedHeaders:['Mcp-Session-Id']});
   const webRoot=resolveWebRoot();
   await app.register(rateLimit,{max:120,timeWindow:'1 minute',keyGenerator:request=>request.ip,allowList:request=>!!webRoot&&isWebPath(request.url)});
   let store=options.store;
@@ -98,6 +76,9 @@ export async function makeServer(options:{store?:StateStore;logger?:boolean;tast
     if(req.url==='/healthz'||(webRoot&&isWebPath(req.url)))return;
     const origin=req.headers.origin;
     if(origin && !allowed.has(origin))throw new ApiError(403,'ORIGIN_DENIED','This Origin is not in the server allowlist');
+    // /mcp is for non-browser MCP clients: no cookie session, no CSRF gate (they send no Origin). A present Origin was
+    // already checked above (DNS-rebinding protection). Each MCP session gets its own workspace inside mcp-http.ts.
+    if(isMcpPath(req.url)){reply.header('Cache-Control','no-store');return;}
     if(req.method!=='GET'&&req.method!=='OPTIONS'&&!origin&&req.headers['sec-fetch-site']==='cross-site')throw new ApiError(403,'CSRF_BLOCKED','Cross-site mutation requires an allowed Origin');
     let sid=req.cookies.rr_session;
     if(!sid || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(sid)) {
@@ -159,17 +140,7 @@ export async function makeServer(options:{store?:StateStore;logger?:boolean;tast
   app.get('/api/programmes/:id/versions',async req=>(await data.read(sessionId(req))).versions.filter(v=>v.programmeId===param(req,'id')));
   app.post('/api/programmes/:id/approve',async req=>{
     const {versionId}=z.object({versionId:idSchema}).strict().parse(req.body);
-    return data.update(sessionId(req),s=>{
-      const version=findVersion(s,versionId);if(version.programmeId!==param(req,'id'))throw new ApiError(409,'PROGRAMME_MISMATCH','Version does not belong to this programme');
-      if(version.status==='INVALIDATED'||version.status==='SUPERSEDED')throw new ApiError(409,'VERSION_NOT_APPROVABLE','Invalidated or superseded versions cannot be approved');
-      const violations=currentViolations(s,version);if(violations.length)throw new ApiError(409,'REVALIDATION_FAILED','Current constraints no longer permit this programme',violations);
-      if(version.status==='APPROVED')return s; // idempotent after latest-state operational validation
-      if(version.inputRevision!==s.revision)throw new ApiError(409,'STALE_DRAFT','Inputs changed after this draft. Generate and review a current draft before approval.');
-      for(const previous of s.versions.filter(v=>v.programmeId===version.programmeId&&v.status==='APPROVED'))previous.status='SUPERSEDED';
-      version.status='APPROVED';version.approvedAt=now();
-      s.events.push({id:randomUUID(),createdAt:now(),type:'HUMAN_APPROVAL',payload:{versionId:version.id,programmeId:version.programmeId},invalidatedVersionIds:[]});
-      return s;
-    });
+    return data.update(sessionId(req),s=>approveVersion(s,versionId,param(req,'id')));
   });
   app.post('/api/programmes/:id/repair',async(req,reply)=>{
     const body=z.object({versionId:idSchema,policy:z.enum(['MINIMAL_CHANGE','GLOBAL_FAIRNESS']).default('MINIMAL_CHANGE')}).strict().parse(req.body);
@@ -204,7 +175,7 @@ export async function makeServer(options:{store?:StateStore;logger?:boolean;tast
     return{beforeVersionId:before.id,afterVersionId:after.id,changes:before.items.map(item=>{const next=after.items.find(i=>i.slotId===item.slotId);return{slotId:item.slotId,before:item,after:next ?? null,changed:JSON.stringify(item)!==JSON.stringify(next)};}),objectiveDelta:after.objective-before.objective,costDelta:after.totalCost-before.totalCost,coverage:after.coverage.map(c=>({...c,delta:c.score-(before.coverage.find(p=>p.cohortId===c.cohortId)?.score??0)}))};
   });
   app.get('/api/programme-versions/:id/export',async(req,reply)=>{const s=await data.read(sessionId(req));const v=findVersion(s,param(req,'id'));if(v.status!=='APPROVED')throw new ApiError(409,'APPROVAL_REQUIRED','Only a currently approved programme can be exported');const violations=currentViolations(s,v);if(violations.length)throw new ApiError(409,'REVALIDATION_FAILED','Programme requires fresh approval',violations);reply.header('Content-Disposition',`attachment; filename="programme-${v.id}.json"`);return{cinema:s.cinema,programme:v,evidence:s.evidence.find(e=>e.id===v.evidenceId),notice:'Programme planning export only. Approval does not book films or clear real rights.'};});
-  app.get('/api/programme-versions/:id/rights-enquiry',async(req,reply)=>{const s=await data.read(sessionId(req));const v=findVersion(s,param(req,'id'));if(v.status!=='APPROVED')throw new ApiError(409,'APPROVAL_REQUIRED','Approve the programme before preparing a rights enquiry');reply.type('text/plain').header('Content-Disposition',`attachment; filename="rights-enquiry-${v.id}.txt"`);return`DRAFT RIGHTS ENQUIRY — NOT SENT\n\nPlease confirm availability, screening format and licence fees for ${s.cinema.name} in ${s.constraints.territory}:\n\n${v.items.map(i=>`${i.filmTitle} | ${i.startAt} | ${i.format} | illustrative fee GBP ${(i.feePence/100).toFixed(2)}`).join('\n')}\n\nAll demo rights and fees are synthetic. No booking or payment has been made. Please confirm real terms before any public screening.\n`;});
+  app.get('/api/programme-versions/:id/rights-enquiry',async(req,reply)=>{const s=await data.read(sessionId(req));const v=findVersion(s,param(req,'id'));if(v.status!=='APPROVED')throw new ApiError(409,'APPROVAL_REQUIRED','Approve the programme before preparing a rights enquiry');reply.type('text/plain').header('Content-Disposition',`attachment; filename="rights-enquiry-${v.id}.txt"`);return rightsEnquiryText(s,v);});
   app.post('/api/qloo/resolve',async req=>{
     const body=z.object({filmId:idSchema.optional(),query:z.string().min(1).max(300).optional(),type:z.string().optional()}).strict().parse(req.body);
     const s=await data.read(sessionId(req));const film=body.filmId?getFilm(s,body.filmId):undefined;
@@ -263,6 +234,7 @@ export async function makeServer(options:{store?:StateStore;logger?:boolean;tast
     }
     s.evaluations.push(evaluation);return s;
   }));
+  registerMcpRoutes(app,tasteSource);
   if(webRoot)registerWebHost(app,webRoot);
   return app;
 }
