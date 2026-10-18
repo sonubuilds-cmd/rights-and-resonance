@@ -1,0 +1,35 @@
+{
+  "name": "rights-and-resonance",
+  "private": true,
+  "version": "0.2.1",
+  "type": "module",
+  "packageManager": "pnpm@10.18.3",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n api,web \"pnpm --filter @rr/api dev\" \"pnpm --filter @rr/web dev\"",
+    "build": "pnpm --filter @rr/web build",
+    "start": "pnpm --filter @rr/api start",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "pnpm --filter @rr/web test:e2e",
+    "probe": "node --env-file-if-exists=.env --import tsx scripts/qloo-probe.ts",
+    "seed": "node --env-file-if-exists=.env --import tsx scripts/seed-demo.ts",
+    "test:http": "node --import tsx scripts/demo-smoke.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/pg": "^8.11.10",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@playwright/test": "^1.51.0",
+    "concurrently": "^9.1.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0",
+    "@rr/domain": "workspace:*",
+    "@rr/solver": "workspace:*",
+    "@rr/qloo": "workspace:*"
+  }
+}

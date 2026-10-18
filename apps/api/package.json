@@ -1,0 +1,27 @@
+{
+  "name": "@rr/api",
+  "version": "0.2.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=../../.env src/index.ts",
+    "start": "tsx --env-file-if-exists=../../.env src/index.ts"
+  },
+  "dependencies": {
+    "@rr/domain": "workspace:*",
+    "@rr/solver": "workspace:*",
+    "@rr/qloo": "workspace:*",
+    "@rr/shared": "workspace:*",
+    "fastify": "^5.2.0",
+    "@fastify/cors": "^10.0.0",
+    "@fastify/cookie": "^11.0.0",
+    "@fastify/rate-limit": "^10.2.0",
+    "@langchain/langgraph": "^0.2.60",
+    "@langchain/core": "^0.3.0",
+    "pg": "^8.13.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0"
+  }
+}

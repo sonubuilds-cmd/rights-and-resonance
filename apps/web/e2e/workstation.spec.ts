@@ -1,0 +1,63 @@
+import { test, expect } from '@playwright/test';
+
+test('generate, inspect, approve, withdraw and explicitly approve a repair', async ({page}) => {
+  await page.goto('/');
+  await expect(page.getByRole('heading', {name: /Good films/})).toBeVisible();
+  await expect(page.getByRole('button', {name:'Export programme',exact:true})).toBeDisabled();
+  await page.getByRole('button', {name:'Generate programme',exact:true}).first().click();
+  await expect(page.getByRole('button', {name:'Approve programme',exact:true})).toBeEnabled();
+  await expect(page.locator('.programme-row')).toHaveCount(4);
+  const films = await page.locator('.programme-row .film-title').allTextContents();
+  expect(new Set(films).size).toBe(4);
+  await page.getByRole('button',{name:'Follow the evidence',exact:true}).click();
+  const drawer = page.getByRole('dialog',{name:'Behind the programme'});
+  await expect(drawer.getByRole('heading',{name:/Cultural evidence/})).toBeVisible();
+  await expect(drawer.getByText('SYNTHETIC_DEMO',{exact:true})).toBeVisible();
+  await expect(drawer.getByRole('heading',{name:/Local operational constraints/})).toBeVisible();
+  await expect(drawer.getByRole('heading',{name:/Solver decision/})).toBeVisible();
+  await expect(drawer.getByRole('heading',{name:/Agent \/ workflow commentary/})).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(drawer).not.toBeVisible();
+  await page.getByRole('button',{name:'Approve programme',exact:true}).click();
+  await expect(page.getByRole('button',{name:'Programme approved',exact:true})).toBeDisabled();
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button',{name:'Export programme',exact:true}).click();
+  expect((await downloadPromise).suggestedFilename()).toMatch(/^programme-.*\.json$/);
+  await page.getByRole('button',{name:`Withdraw rights for ${films[0]}`,exact:true}).click();
+  await page.getByRole('button',{name:'Withdraw rights & repair',exact:true}).click();
+  await expect(page.getByRole('heading',{name:/Plans change/})).toBeVisible();
+  await expect(page.getByText('INVALIDATED',{exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Approve repair',exact:true})).toBeEnabled();
+  await expect(page.locator('.diff-panel.after .diff-row')).toHaveCount(4);
+  expect(await page.locator('.diff-panel.after .diff-row span').allTextContents()).not.toContain(films[0]);
+  await page.getByRole('button',{name:'Approve repair',exact:true}).click();
+  await expect(page.getByRole('button',{name:'Repair approved',exact:true})).toBeDisabled();
+  await page.getByRole('navigation',{name:'Workstation sections'}).getByRole('button',{name:'Evaluation lab'}).click();
+  await page.getByRole('button',{name:'Run comparison',exact:true}).click();
+  await expect(page.getByRole('heading',{name:'Latest comparison',exact:true})).toBeVisible();
+  const qlooRow = page.locator('tbody tr').filter({has:page.getByRole('cell',{name:'QLOO',exact:true})});
+  await expect(qlooRow).toContainText('UNAVAILABLE');
+  await expect(qlooRow).toContainText('Unknown');
+});
+
+test('mobile navigation, missing provider, and editor cancellation', async ({page}) => {
+  await page.setViewportSize({width:390,height:844});
+  await page.goto('/');
+  await expect(page.getByRole('heading',{name:/Good films/})).toBeVisible();
+  const nav=page.getByRole('navigation',{name:'Workstation navigation'});
+  await nav.getByRole('button',{name:'Audience cohorts'}).click();
+  await page.getByRole('button',{name:'Edit seeds',exact:true}).first().click();
+  const editor=page.locator('textarea').first();
+  const original=await editor.inputValue();
+  await editor.fill('movie: Incomplete');
+  await page.getByRole('button',{name:'Save seeds',exact:true}).click();
+  await expect(page.getByText('Add at least two cultural seeds.',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Cancel',exact:true}).click();
+  await page.getByRole('button',{name:'Edit seeds',exact:true}).first().click();
+  // Cancel should discard in-progress seed edits, not silently save them.
+  await expect(editor).toHaveValue(original);
+  await nav.getByRole('button',{name:'Programme canvas'}).click();
+  await page.getByLabel('Evidence mode').selectOption('QLOO');
+  await expect(page.getByText(/Live Qloo is not configured/)).toBeVisible();
+  await expect(page.getByRole('button',{name:'Generate programme',exact:true}).first()).toBeDisabled();
+});

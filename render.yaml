@@ -1,0 +1,31 @@
+# Optional API hosting template. Applying it may incur provider charges.
+# Web is deployed separately (e.g. Cloudflare Pages); no database is created here.
+services:
+  - type: web
+    name: rights-and-resonance-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    numInstances: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 3001
+      - key: QLOO_TRANSPORT
+        value: harness
+      - key: QLOO_BASE_URL
+        value: https://hackathon.api.qloo.com
+      - key: ALLOWED_ORIGINS
+        sync: false
+      # none is necessary for Pages and API on unrelated hostnames.
+      # Same-site custom domains may use lax instead; see docs/deployment.md.
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: COOKIE_SAME_SITE
+        value: none
+# Add DATABASE_URL and provider keys in the service's secret settings only.
+# Without DATABASE_URL state is demo-only and disappears on restart.

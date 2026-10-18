@@ -1,0 +1,6 @@
+{
+  "fixtureLabel": "SYNTHETIC CONTRACT FIXTURES. Hand-authored for parser tests. NOT recorded Qloo API responses.",
+  "search": {"success":true,"results":[{"entity_id":"00000000-0000-4000-8000-000000000001","name":"Example Film","subtype":"urn:entity:movie","release_year":2021}]},
+  "insights": {"success":true,"results":{"entities":[{"entity_id":"00000000-0000-4000-8000-000000000001","name":"Example Film","subtype":"urn:entity:movie","affinity":0.8},{"entity_id":"00000000-0000-4000-8000-000000000002","name":"Other Example","subtype":"urn:entity:movie","affinity":0.3}]}},
+  "withExplainability": {"success":true,"query":{"explainability":{"synthetic_fixture":true}},"results":{"entities":[{"entity_id":"00000000-0000-4000-8000-000000000001","name":"Example Film","subtype":"urn:entity:movie","query":{"affinity":0.8,"explainability":{"synthetic_fixture":true,"signal.interests.entities":{"00000000-0000-4000-8000-000000000009":0.7}}}}]}}
+}

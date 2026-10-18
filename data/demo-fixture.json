@@ -1,0 +1,1099 @@
+{
+  "cinema": {
+    "id": "lantern",
+    "name": "The Lantern Cinema",
+    "city": "Bristol",
+    "territory": "GB",
+    "currency": "GBP",
+    "timezone": "Europe/London"
+  },
+  "films": [
+    {
+      "id": "spirited-away",
+      "title": "Spirited Away",
+      "year": 2001,
+      "runtimeMinutes": 125,
+      "country": "Japan",
+      "genres": [
+        "Animation",
+        "Fantasy"
+      ],
+      "themes": [
+        "wonder",
+        "nature"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 30000,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 1 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "moonlight",
+      "title": "Moonlight",
+      "year": 2016,
+      "runtimeMinutes": 111,
+      "country": "USA",
+      "genres": [
+        "Drama"
+      ],
+      "themes": [
+        "identity",
+        "intimacy"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 47500,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 2 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "aftersun",
+      "title": "Aftersun",
+      "year": 2022,
+      "runtimeMinutes": 102,
+      "country": "UK",
+      "genres": [
+        "Drama"
+      ],
+      "themes": [
+        "memory",
+        "intimacy"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 35000,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 3 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "grand-budapest",
+      "title": "The Grand Budapest Hotel",
+      "year": 2014,
+      "runtimeMinutes": 99,
+      "country": "USA",
+      "genres": [
+        "Comedy",
+        "Adventure"
+      ],
+      "themes": [
+        "design",
+        "escape"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 52500,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 4 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "portrait-lady-fire",
+      "title": "Portrait of a Lady on Fire",
+      "year": 2019,
+      "runtimeMinutes": 122,
+      "country": "France",
+      "genres": [
+        "Drama",
+        "Romance"
+      ],
+      "themes": [
+        "art",
+        "intimacy"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 40000,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 1 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "past-lives",
+      "title": "Past Lives",
+      "year": 2023,
+      "runtimeMinutes": 106,
+      "country": "USA",
+      "genres": [
+        "Drama",
+        "Romance"
+      ],
+      "themes": [
+        "memory",
+        "identity"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 57500,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 2 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "parasite",
+      "title": "Parasite",
+      "year": 2019,
+      "runtimeMinutes": 132,
+      "country": "South Korea",
+      "genres": [
+        "Thriller",
+        "Drama"
+      ],
+      "themes": [
+        "society",
+        "tension"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 45000,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 3 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "everything-everywhere",
+      "title": "Everything Everywhere All at Once",
+      "year": 2022,
+      "runtimeMinutes": 139,
+      "country": "USA",
+      "genres": [
+        "Science Fiction",
+        "Comedy"
+      ],
+      "themes": [
+        "identity",
+        "wonder"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 32500,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 4 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "amelie",
+      "title": "Amélie",
+      "year": 2001,
+      "runtimeMinutes": 122,
+      "country": "France",
+      "genres": [
+        "Comedy",
+        "Romance"
+      ],
+      "themes": [
+        "design",
+        "wonder"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 50000,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 1 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "in-mood-love",
+      "title": "In the Mood for Love",
+      "year": 2000,
+      "runtimeMinutes": 98,
+      "country": "Hong Kong",
+      "genres": [
+        "Drama",
+        "Romance"
+      ],
+      "themes": [
+        "intimacy",
+        "design"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 37500,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 2 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "perfect-days",
+      "title": "Perfect Days",
+      "year": 2023,
+      "runtimeMinutes": 124,
+      "country": "Japan",
+      "genres": [
+        "Drama"
+      ],
+      "themes": [
+        "nature",
+        "music"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 55000,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 3 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "banshees-inisherin",
+      "title": "The Banshees of Inisherin",
+      "year": 2022,
+      "runtimeMinutes": 114,
+      "country": "Ireland",
+      "genres": [
+        "Drama",
+        "Comedy"
+      ],
+      "themes": [
+        "society",
+        "isolation"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 42500,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 4 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "sound-metal",
+      "title": "Sound of Metal",
+      "year": 2019,
+      "runtimeMinutes": 120,
+      "country": "USA",
+      "genres": [
+        "Drama",
+        "Music"
+      ],
+      "themes": [
+        "music",
+        "identity"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 30000,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 1 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "whiplash",
+      "title": "Whiplash",
+      "year": 2014,
+      "runtimeMinutes": 106,
+      "country": "USA",
+      "genres": [
+        "Drama",
+        "Music"
+      ],
+      "themes": [
+        "music",
+        "ambition"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 47500,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 2 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "lives-others",
+      "title": "The Lives of Others",
+      "year": 2006,
+      "runtimeMinutes": 137,
+      "country": "Germany",
+      "genres": [
+        "Drama",
+        "Thriller"
+      ],
+      "themes": [
+        "society",
+        "art"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 35000,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 3 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "arrival",
+      "title": "Arrival",
+      "year": 2016,
+      "runtimeMinutes": 116,
+      "country": "USA",
+      "genres": [
+        "Science Fiction",
+        "Drama"
+      ],
+      "themes": [
+        "language",
+        "wonder"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 52500,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 4 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "her",
+      "title": "Her",
+      "year": 2013,
+      "runtimeMinutes": 126,
+      "country": "USA",
+      "genres": [
+        "Science Fiction",
+        "Romance"
+      ],
+      "themes": [
+        "design",
+        "intimacy"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 40000,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 1 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "wilderpeople",
+      "title": "Hunt for the Wilderpeople",
+      "year": 2016,
+      "runtimeMinutes": 101,
+      "country": "New Zealand",
+      "genres": [
+        "Adventure",
+        "Comedy"
+      ],
+      "themes": [
+        "nature",
+        "escape"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 57500,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 2 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "farewell",
+      "title": "The Farewell",
+      "year": 2019,
+      "runtimeMinutes": 100,
+      "country": "USA",
+      "genres": [
+        "Drama",
+        "Comedy"
+      ],
+      "themes": [
+        "identity",
+        "family"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 45000,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 3 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "little-women",
+      "title": "Little Women",
+      "year": 2019,
+      "runtimeMinutes": 135,
+      "country": "USA",
+      "genres": [
+        "Drama",
+        "Romance"
+      ],
+      "themes": [
+        "art",
+        "family"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 32500,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 4 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "cinema-paradiso",
+      "title": "Cinema Paradiso",
+      "year": 1988,
+      "runtimeMinutes": 124,
+      "country": "Italy",
+      "genres": [
+        "Drama"
+      ],
+      "themes": [
+        "memory",
+        "art"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 50000,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 1 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "pans-labyrinth",
+      "title": "Pan’s Labyrinth",
+      "year": 2006,
+      "runtimeMinutes": 119,
+      "country": "Spain",
+      "genres": [
+        "Fantasy",
+        "Drama"
+      ],
+      "themes": [
+        "wonder",
+        "society"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 37500,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 2 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "akira",
+      "title": "Akira",
+      "year": 1988,
+      "runtimeMinutes": 124,
+      "country": "Japan",
+      "genres": [
+        "Animation",
+        "Science Fiction"
+      ],
+      "themes": [
+        "wonder",
+        "society"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 55000,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 3 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "totoro",
+      "title": "My Neighbour Totoro",
+      "year": 1988,
+      "runtimeMinutes": 86,
+      "country": "Japan",
+      "genres": [
+        "Animation",
+        "Fantasy"
+      ],
+      "themes": [
+        "nature",
+        "family"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 42500,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 4 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "red-turtle",
+      "title": "The Red Turtle",
+      "year": 2016,
+      "runtimeMinutes": 81,
+      "country": "France",
+      "genres": [
+        "Animation",
+        "Fantasy"
+      ],
+      "themes": [
+        "nature",
+        "isolation"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 30000,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 1 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "florida-project",
+      "title": "The Florida Project",
+      "year": 2017,
+      "runtimeMinutes": 111,
+      "country": "USA",
+      "genres": [
+        "Drama"
+      ],
+      "themes": [
+        "society",
+        "family"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 47500,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 2 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "drive",
+      "title": "Drive",
+      "year": 2011,
+      "runtimeMinutes": 100,
+      "country": "USA",
+      "genres": [
+        "Thriller",
+        "Crime"
+      ],
+      "themes": [
+        "music",
+        "design"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": false,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 35000,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 3 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "blade-runner-2049",
+      "title": "Blade Runner 2049",
+      "year": 2017,
+      "runtimeMinutes": 164,
+      "country": "USA",
+      "genres": [
+        "Science Fiction",
+        "Thriller"
+      ],
+      "themes": [
+        "design",
+        "identity"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "US",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 52500,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 4 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "blade-runner",
+      "title": "Blade Runner",
+      "year": 1982,
+      "runtimeMinutes": 117,
+      "country": "USA",
+      "genres": [
+        "Science Fiction",
+        "Thriller"
+      ],
+      "themes": [
+        "society",
+        "identity"
+      ],
+      "formats": [
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 40000,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 1 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    },
+    {
+      "id": "paddington-2",
+      "title": "Paddington 2",
+      "year": 2017,
+      "runtimeMinutes": 103,
+      "country": "UK",
+      "genres": [
+        "Comedy",
+        "Adventure"
+      ],
+      "themes": [
+        "family",
+        "friendship"
+      ],
+      "formats": [
+        "DCP",
+        "BLURAY"
+      ],
+      "rights": {
+        "available": true,
+        "territory": "GB",
+        "availableFrom": "2026-10-01T00:00:00Z",
+        "availableTo": "2026-12-31T23:59:59Z",
+        "feePence": 57500,
+        "source": "SYNTHETIC",
+        "distributor": "Demo distributor 2 — synthetic"
+      },
+      "qlooEntityId": null,
+      "mappingStatus": "UNMAPPED"
+    }
+  ],
+  "cohorts": [
+    {
+      "id": "film-society",
+      "name": "Film Society",
+      "description": "A fictional cross-domain cohort drawn to intimate stories, literary voices and visual craft.",
+      "seeds": [
+        {
+          "name": "In the Mood for Love",
+          "domain": "movie"
+        },
+        {
+          "name": "Normal People",
+          "domain": "book"
+        },
+        {
+          "name": "Nils Frahm",
+          "domain": "artist"
+        }
+      ]
+    },
+    {
+      "id": "alternative-music",
+      "name": "Alternative Music",
+      "description": "A fictional cross-domain cohort drawn to experimental sound, bold art and unexpected stories.",
+      "seeds": [
+        {
+          "name": "Radiohead",
+          "domain": "artist"
+        },
+        {
+          "name": "Björk",
+          "domain": "artist"
+        },
+        {
+          "name": "Just Kids",
+          "domain": "book"
+        }
+      ]
+    },
+    {
+      "id": "gaming-speculative",
+      "name": "Gaming & Speculative Fiction",
+      "description": "A fictional cross-domain cohort drawn to speculative worlds, cultural questions and stories of belonging.",
+      "seeds": [
+        {
+          "name": "Cyberpunk 2077",
+          "domain": "video_game"
+        },
+        {
+          "name": "Neuromancer",
+          "domain": "book"
+        },
+        {
+          "name": "Blade Runner",
+          "domain": "movie"
+        }
+      ]
+    }
+  ],
+  "slots": [
+    {
+      "id": "fri-early",
+      "label": "Friday · early",
+      "startAt": "2026-10-16T17:00:00Z",
+      "endAt": "2026-10-16T19:30:00Z",
+      "format": "DCP"
+    },
+    {
+      "id": "fri-late",
+      "label": "Friday · late",
+      "startAt": "2026-10-16T19:45:00Z",
+      "endAt": "2026-10-16T22:15:00Z",
+      "format": "DCP"
+    },
+    {
+      "id": "sat-early",
+      "label": "Saturday · early",
+      "startAt": "2026-10-17T16:00:00Z",
+      "endAt": "2026-10-17T18:30:00Z",
+      "format": "DCP"
+    },
+    {
+      "id": "sat-late",
+      "label": "Saturday · late",
+      "startAt": "2026-10-17T19:00:00Z",
+      "endAt": "2026-10-17T21:45:00Z",
+      "format": "DCP"
+    }
+  ],
+  "constraints": {
+    "territory": "GB",
+    "budgetPence": 185000
+  },
+  "affinities": {
+    "film-society": {
+      "spirited-away": 0.68,
+      "moonlight": 0.97,
+      "aftersun": 0.99,
+      "grand-budapest": 0.72,
+      "portrait-lady-fire": 0.98,
+      "past-lives": 0.96,
+      "parasite": 0.69,
+      "everything-everywhere": 0.59,
+      "amelie": 0.83,
+      "in-mood-love": 0.95,
+      "perfect-days": 0.94,
+      "banshees-inisherin": 0.76,
+      "sound-metal": 0.85,
+      "whiplash": 0.78,
+      "lives-others": 0.86,
+      "arrival": 0.82,
+      "her": 0.92,
+      "wilderpeople": 0.62,
+      "farewell": 0.88,
+      "little-women": 0.89,
+      "cinema-paradiso": 0.91,
+      "pans-labyrinth": 0.65,
+      "akira": 0.48,
+      "totoro": 0.6,
+      "red-turtle": 0.64,
+      "florida-project": 0.77,
+      "drive": 0.58,
+      "blade-runner-2049": 0.73,
+      "blade-runner": 0.52,
+      "paddington-2": 0.55
+    },
+    "alternative-music": {
+      "spirited-away": 0.78,
+      "moonlight": 0.93,
+      "aftersun": 0.86,
+      "grand-budapest": 0.92,
+      "portrait-lady-fire": 0.84,
+      "past-lives": 0.82,
+      "parasite": 0.75,
+      "everything-everywhere": 0.87,
+      "amelie": 0.88,
+      "in-mood-love": 0.89,
+      "perfect-days": 0.96,
+      "banshees-inisherin": 0.73,
+      "sound-metal": 0.99,
+      "whiplash": 0.98,
+      "lives-others": 0.79,
+      "arrival": 0.85,
+      "her": 0.94,
+      "wilderpeople": 0.69,
+      "farewell": 0.71,
+      "little-women": 0.83,
+      "cinema-paradiso": 0.9,
+      "pans-labyrinth": 0.76,
+      "akira": 0.8,
+      "totoro": 0.65,
+      "red-turtle": 0.67,
+      "florida-project": 0.81,
+      "drive": 0.97,
+      "blade-runner-2049": 0.91,
+      "blade-runner": 0.77,
+      "paddington-2": 0.63
+    },
+    "gaming-speculative": {
+      "spirited-away": 0.94,
+      "moonlight": 0.75,
+      "aftersun": 0.58,
+      "grand-budapest": 0.78,
+      "portrait-lady-fire": 0.62,
+      "past-lives": 0.65,
+      "parasite": 0.89,
+      "everything-everywhere": 0.95,
+      "amelie": 0.71,
+      "in-mood-love": 0.69,
+      "perfect-days": 0.72,
+      "banshees-inisherin": 0.61,
+      "sound-metal": 0.76,
+      "whiplash": 0.74,
+      "lives-others": 0.81,
+      "arrival": 0.97,
+      "her": 0.92,
+      "wilderpeople": 0.82,
+      "farewell": 0.66,
+      "little-women": 0.6,
+      "cinema-paradiso": 0.64,
+      "pans-labyrinth": 0.93,
+      "akira": 0.99,
+      "totoro": 0.86,
+      "red-turtle": 0.84,
+      "florida-project": 0.68,
+      "drive": 0.87,
+      "blade-runner-2049": 0.96,
+      "blade-runner": 0.98,
+      "paddington-2": 0.8
+    }
+  },
+  "evidenceMode": "DEMO",
+  "notice": "Illustrative demo only. Rights availability, licence fees and cohort affinities are synthetic. No Qloo response, booking, attendance forecast or real rights clearance is implied."
+}

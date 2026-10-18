@@ -1,0 +1,10 @@
+{
+  "name": "@rr/domain",
+  "version": "0.2.1",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "zod": "^3.24.0"
+  }
+}
