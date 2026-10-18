@@ -7,6 +7,8 @@ if (typeof globalThis === 'object' && 'document' in globalThis) {
   throw new Error('@rr/qloo must only run on the server');
 }
 
+/** Local capability check; loading the harness takes ~20s on a 0.1-CPU host, so allow a generous default. */
+const READINESS_TIMEOUT_MS = Math.min(Math.max(Number(process.env.QLOO_READINESS_TIMEOUT_MS) || 60_000, 1_000), 120_000);
 export const QLOO_DEFAULT_BASE_URL = 'https://hackathon.api.qloo.com';
 export const INSIGHTS_PARAMETER_ALLOWLIST = Object.freeze([
   'filter.type', 'signal.interests.entities', 'filter.results.entities', 'feature.explainability', 'take',
@@ -239,11 +241,11 @@ export class QlooClient {
   status(): { configured: boolean; baseUrl: string; transport: QlooTransport } { return { configured: !!this.#apiKey, baseUrl: this.#baseUrl, transport: this.#transport }; }
   /** Local-only, memoized capability inspection. It never claims credential/provider verification. */
   readiness(): Promise<QlooReadiness> {
-    return this.#readinessPromise ??= (async () => {
+    const pending = this.#readinessPromise ??= (async () => {
       const harness: QlooReadiness['harness'] = { package: QLOO_HARNESS_PACKAGE, minimumVersion: QLOO_HARNESS_MINIMUM_VERSION, installedVersion: null, status: 'NOT_USED', capabilities: [], checkedAt: new Date(this.#options.now()).toISOString(), message: 'Explicit direct HTTP compatibility mode; official harness is not used' };
       if (this.#transport === 'harness') {
         let result: HarnessOutput;
-        try { result = await this.#harnessRunner({ action: 'capabilities' }, { timeoutMs: 10_000 }); }
+        try { result = await this.#harnessRunner({ action: 'capabilities' }, { timeoutMs: READINESS_TIMEOUT_MS }); }
         catch { result = { ok: false, code: 'CONTRACT' }; }
         harness.installedVersion = result.version ?? null;
         if (result.ok && result.networkCalls === 0 && ['api search', 'api entity', 'api insights'].every(c => result.capabilities?.includes(c))) {
@@ -252,6 +254,9 @@ export class QlooClient {
       }
       return immutable({ ...this.status(), liveVerification: 'UNVERIFIED' as const, ready: !!this.#apiKey && ['READY', 'NOT_USED'].includes(harness.status), harness });
     })();
+    // A failed check (e.g. a cold start on a tiny CPU) is retried on the next call instead of sticking until restart.
+    void pending.then(result => { if (result.harness.status === 'ERROR' && this.#readinessPromise === pending) this.#readinessPromise = undefined; });
+    return pending;
   }
   clearCache(): void { this.#cache.clear(); }
   async search(query: string, options: { take?: number; type?: string } = {}): Promise<QlooResult> {

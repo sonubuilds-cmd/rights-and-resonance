@@ -3,6 +3,9 @@ import { markLiveVerified } from './live-status.js';
 import { createDemoData, type TasteProfile, type TasteTag } from '@rr/domain';
 import { QlooClient, QlooError, extractEntityTags, type EntityTag, type QlooEvidence, type QlooTag } from '@rr/qloo';
 
+/** Names the call as it was actually made, so provenance stays accurate in direct-http mode. */
+const callLabel = (client: QlooClient): string => client.status().transport === 'harness' ? 'qloo api' : 'HTTPS GET';
+
 /** Only Qloo theme tags are used for taste DNA: human readable, cross-domain, and shared by films and books/music/games. */
 export const THEME_TAG_TYPE = 'urn:tag:theme:qloo';
 const FILM_FALLBACK_TYPES = ['urn:tag:plot:qloo', 'urn:tag:subgenre:qloo', 'urn:tag:genre:qloo'];
@@ -135,12 +138,12 @@ export class LiveQlooTasteSource {
     const filmRecords = new Map<string, EntityTag[] | null>(demo.films.map(f => [f.id, null]));
     const cohortPools = new Map<string, QlooTag[] | null>(); const ranks = new Map<string, Map<string, CohortRank>>();
     try {
-      const res = await client.entities([...entityOf.values()]); evidence.push(res.evidence); workflow.push(`qloo api /entities (${entityOf.size} mapped films)`);
+      const res = await client.entities([...entityOf.values()]); evidence.push(res.evidence); workflow.push(`${callLabel(client)} /entities (${entityOf.size} mapped films)`);
       if (res.status !== 'complete') warnings.push('Qloo film records were incomplete.');
       if (res.evidence.cache === 'STALE_CACHE') warnings.push('Film records come from a stale cache after a provider failure.');
       const byEntity = new Map(res.entities.map(e => [e.entityId, extractEntityTags(e)]));
       for (const [filmId, entityId] of entityOf) filmRecords.set(filmId, byEntity.get(entityId) ?? null);
-    } catch (error) { warnings.push(`Qloo film lookup failed (${error instanceof QlooError ? error.code : 'ERROR'}).`); workflow.push('qloo api /entities (failed)'); }
+    } catch (error) { warnings.push(`Qloo film lookup failed (${error instanceof QlooError ? error.code : 'ERROR'}).`); workflow.push(`${callLabel(client)} /entities (failed)`); }
     const allEntities = [...entityOf.values()];
     for (const cohort of demo.cohorts) {
       const seedIds = [...new Set(cohort.seeds.map(s => mappings.seeds[`${cohort.id}:${s.name}`]?.toLowerCase()).filter((v): v is string => !!v))];
@@ -166,7 +169,7 @@ export class LiveQlooTasteSource {
     }
     if (evidence.length && evidence.some(e => e.cache === 'LIVE') && !evidence.some(e => e.cache === 'STALE_CACHE')) markLiveVerified('TASTE');
     const cached = evidence.filter(e => e.cache !== 'LIVE').length;
-    workflow.push(`qloo api /v2/insights (urn:tag, ${THEME_TAG_TYPE}, ${demo.cohorts.length} cohorts)`, `qloo api /v2/insights (urn:entity:movie fixed universe, ${demo.cohorts.length} cohort ranks)`,
+    workflow.push(`${callLabel(client)} /v2/insights (urn:tag, ${THEME_TAG_TYPE}, ${demo.cohorts.length} cohorts)`, `${callLabel(client)} /v2/insights (urn:entity:movie fixed universe, ${demo.cohorts.length} cohort ranks)`,
       'local: tag-id intersection of film and cohort tags; deterministic template sentence (no LLM)');
     if (cached) workflow.push(`${cached} of ${evidence.length} Qloo responses served from the in-process cache`);
     return buildLiveTasteProfile({ generatedAt, cohorts: demo.cohorts.map(c => ({ id: c.id, name: c.name })), films: demo.films.map(f => ({ id: f.id, title: f.title })), cohortPools, filmRecords, ranks, workflow, warnings });

@@ -17,9 +17,11 @@ COPY . .
 RUN pnpm typecheck && pnpm build
 
 FROM node:22-bookworm-slim AS runtime
+# Small hosts (e.g. Render free, ~0.1 CPU) need ~20s to load the harness per call, so the image
+# explicitly selects direct HTTPS to the pinned hackathon origin. Set QLOO_TRANSPORT=harness on larger hosts.
 WORKDIR /app
 RUN node -e "const [a,b]=process.versions.node.split('.').map(Number); if(a<22||(a===22&&b<19)) process.exit(1)"
-ENV NODE_ENV=production HOST=0.0.0.0 PORT=3001 SERVE_WEB=true COOKIE_SAME_SITE=lax QLOO_TRANSPORT=harness QLOO_BASE_URL=https://hackathon.api.qloo.com
+ENV NODE_ENV=production HOST=0.0.0.0 PORT=3001 SERVE_WEB=true COOKIE_SAME_SITE=lax QLOO_TRANSPORT=direct-http QLOO_BASE_URL=https://hackathon.api.qloo.com
 # Keep workspace source and its symlinks: packages intentionally export TS.
 # tsx is required at runtime; this small prototype has not pruned dev tooling.
 COPY --from=build --chown=node:node /app /app

@@ -18,7 +18,7 @@ services:
       - key: SERVE_WEB
         value: "true"
       - key: QLOO_TRANSPORT
-        value: harness
+        value: direct-http
       - key: QLOO_BASE_URL
         value: https://hackathon.api.qloo.com
       # Secret: paste in the Render dashboard. Omit it and the live Qloo gate stays UNVERIFIED.
