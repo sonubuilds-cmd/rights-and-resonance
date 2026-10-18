@@ -9,7 +9,7 @@ import { FilmSchema, CohortSchema, CohortSeedSchema, FilmFormatSchema, Screening
 import { filmEligibility } from '@rr/solver';
 import { QlooError } from '@rr/qloo';
 import { MemoryStore, PostgresStore, type StateStore } from './store.js';
-import { createInitialState, currentProviderConfiguration } from './state.js';
+import { createInitialState, currentProviderConfiguration, defaultEvidenceMode } from './state.js';
 import { generateProgramme, currentViolations } from './workflow.js';
 import { createTasteSource, type TasteDnaSource } from './taste.js';
 import { collectAffinities, qloo, recordEvidence, EvidenceCollectionError } from './evidence.js';
@@ -149,7 +149,7 @@ export async function makeServer(options:{store?:StateStore;logger?:boolean;tast
   app.post('/api/cohorts/:id',editCohort);app.patch('/api/cohorts/:id',editCohort);app.put('/api/cohorts/:id/seeds',editCohort);
   app.post('/api/programmes/generate',{config:{rateLimit:{max:20,timeWindow:'1 minute'}}},async(req,reply)=>{
     const body=z.object({mode:EvidenceModeSchema.optional()}).strict().parse(req.body ?? {});
-    const result=await data.update(sessionId(req),async s=>{const generated=await generateProgramme(s,body.mode ?? 'DEMO',{parent:s.versions.at(-1)});return{state:s,error:generated.error};});
+    const result=await data.update(sessionId(req),async s=>{const generated=await generateProgramme(s,body.mode ?? defaultEvidenceMode(),{parent:s.versions.at(-1)});return{state:s,error:generated.error};});
     if(result.error)return reply.status(result.error.includes('NOT_CONFIGURED')?503:422).send({error:'GENERATION_BLOCKED',message:result.error,state:result.state});
     return result.state;
   });

@@ -11,6 +11,10 @@ export const QLOO_DEFAULT_BASE_URL = 'https://hackathon.api.qloo.com';
 export const INSIGHTS_PARAMETER_ALLOWLIST = Object.freeze([
   'filter.type', 'signal.interests.entities', 'filter.results.entities', 'feature.explainability', 'take',
 ] as const);
+/** Tag insights (cohort taste DNA) use their own, equally closed, parameter set. */
+export const TAG_INSIGHTS_PARAMETER_ALLOWLIST = Object.freeze([
+  'filter.type', 'signal.interests.entities', 'filter.tag.types', 'filter.parents.types', 'take',
+] as const);
 export type QlooErrorCode = 'NOT_CONFIGURED' | 'INVALID_REQUEST' | 'UNAUTHORIZED' | 'FORBIDDEN' | 'NOT_FOUND' | 'RATE_LIMITED' | 'UPSTREAM' | 'TIMEOUT' | 'NETWORK' | 'INVALID_RESPONSE' | 'HARNESS_UNAVAILABLE' | 'HARNESS_INCOMPATIBLE' | 'HARNESS_CONTRACT';
 export type QlooTransport = 'harness' | 'direct-http';
 export type QlooFailureMetadata = { transport: QlooTransport; baseUrl: string; endpoint: string; requestHash: string; attempts: number; retryAfterMs?: number; retryAt?: string; retryBudgetExceeded?: boolean };
@@ -41,6 +45,10 @@ export type QlooInsightsResult = QlooResult & {
   rows: RankedAffinity[]; candidateUniverse: string[]; missingEntityIds: string[]; complete: boolean;
   aggregateExplainability?: unknown;
 };
+export type QlooTag = { tagId: string; name: string; types: string[]; subtype: string | null; rawAffinity: number | null };
+export type QlooTagInsightsResult = { status: 'complete' | 'partial' | 'unknown'; tags: QlooTag[]; raw: unknown; evidence: QlooEvidence; warnings: string[] };
+export type TagInsightsRequest = { seedEntityIds: string[]; tagTypes?: string; parentType?: string; take?: number };
+export type EntityTag = { id: string; name: string; type: string };
 export type InsightsRequest = { seedEntityIds: string[]; candidateEntityIds: string[]; explainability?: boolean; take?: number };
 export type QlooClientOptions = {
   apiKey?: string; baseUrl?: string; timeoutMs?: number; maxAttempts?: number; transport?: string; retryBudgetMs?: number;
@@ -121,6 +129,31 @@ export function parseQlooEntities(raw: unknown, endpoint: QlooEvidence['endpoint
     entities.push(entity);
   }
   return { entities, status: warnings.length ? 'partial' : 'complete', warnings };
+}
+
+/** Parse `/v2/insights?filter.type=urn:tag` → results.tags[]. Only explicit fields; malformed rows are dropped with a warning. */
+export function parseQlooTags(raw: unknown): Pick<QlooTagInsightsResult, 'tags' | 'status' | 'warnings'> {
+  if (!record(raw) || raw.success !== true || !record(raw.results) || !Array.isArray(raw.results.tags)) return { tags: [], status: 'unknown', warnings: ['Response did not affirm success'] };
+  const warnings: string[] = []; const tags: QlooTag[] = []; const seen = new Set<string>();
+  for (const item of raw.results.tags) {
+    const query = record(item) && record(item.query) ? item.query : {};
+    if (!record(item) || !present(item.tag_id) || !present(item.name) || seen.has(item.tag_id)) { warnings.push('Malformed or duplicate tag omitted; response is incomplete'); continue; }
+    seen.add(item.tag_id);
+    tags.push({ tagId: item.tag_id, name: item.name.trim(), types: Array.isArray(item.types) ? item.types.filter(present) : [], subtype: present(item.subtype) ? item.subtype : null, rawAffinity: score(query.affinity) ? query.affinity : null });
+  }
+  return { tags, status: warnings.length ? 'partial' : 'complete', warnings };
+}
+/** Tags carried on a /search or /entities record (`tag_id` live; `id` tolerated). Never invents tags. */
+export function extractEntityTags(entity: Pick<QlooEntity, 'raw'>): EntityTag[] {
+  const list = entity.raw.tags; if (!Array.isArray(list)) return [];
+  const out: EntityTag[] = []; const seen = new Set<string>();
+  for (const t of list) {
+    if (!record(t)) continue;
+    const id = present(t.tag_id) ? t.tag_id : present(t.id) ? t.id : null;
+    if (!id || !present(t.name) || seen.has(id)) continue;
+    seen.add(id); out.push({ id, name: t.name.trim(), type: present(t.type) ? t.type : id.split(':').slice(0, 4).join(':') });
+  }
+  return out;
 }
 
 /** Midrank percentile, 0 = lowest, 1 = highest, ties share a rank. No partial-universe normalization. */
@@ -260,13 +293,27 @@ export class QlooClient {
       result.warnings.push('Per-entity explainability was not returned; none is inferred');
     return immutable({ ...result, ...ranked, complete, ...(query && Object.hasOwn(query, 'explainability') ? { aggregateExplainability: query.explainability } : {}) });
   }
+  /** Cohort taste DNA: tags a seed set leans towards. Seeds may be any domain; results are tag rows, not entities. */
+  async tagInsights(request: TagInsightsRequest): Promise<QlooTagInsightsResult> {
+    if (!record(request) || Object.keys(request).some(k => !['seedEntityIds', 'tagTypes', 'parentType', 'take'].includes(k))) invalid('Unsupported tag Insights request option');
+    const seeds = ids(request.seedEntityIds, 'Seed entities').sort();
+    const take = boundedInteger(request.take ?? 50, 1, 50, 'take');
+    if (request.tagTypes !== undefined && !/^urn:tag:[a-z_]+:[a-z_]+$/.test(request.tagTypes)) invalid('Unsupported tag type');
+    if (request.parentType !== undefined && !/^urn:entity:[a-z_]+$/.test(request.parentType)) invalid('Unsupported parent entity type');
+    const params: Record<string, string> = { 'filter.type': 'urn:tag', 'signal.interests.entities': seeds.join(','), take: String(take),
+      ...(request.tagTypes ? { 'filter.tag.types': request.tagTypes } : {}), ...(request.parentType ? { 'filter.parents.types': request.parentType } : {}) };
+    const result = await this.#request('/v2/insights', params, raw => { const p = parseQlooTags(raw); return p.status === 'complete' && p.tags.length > 0; });
+    const parsed = parseQlooTags(result.raw);
+    if (result.evidence.cache === 'STALE_CACHE') parsed.warnings.push('Historical cached evidence after transient provider failure; not a fresh observation');
+    return immutable({ ...result, ...parsed });
+  }
   async #parsed(endpoint: QlooEvidence['endpoint'], params: Record<string, string>): Promise<QlooResult> {
     const result = await this.#request(endpoint, params);
     const parsed = parseQlooEntities(result.raw, endpoint);
     if (result.evidence.cache === 'STALE_CACHE') parsed.warnings.push('Historical cached evidence after transient provider failure; not a fresh observation');
     return { ...result, ...parsed };
   }
-  async #request(endpoint: QlooEvidence['endpoint'], params: Record<string, string>): Promise<{ raw: unknown; evidence: QlooEvidence }> {
+  async #request(endpoint: QlooEvidence['endpoint'], params: Record<string, string>, cacheable?: (raw: unknown) => boolean): Promise<{ raw: unknown; evidence: QlooEvidence }> {
     const url = new URL(endpoint, this.#baseUrl);
     Object.entries(params).sort(([a], [b]) => a.localeCompare(b)).forEach(([key, value]) => url.searchParams.set(key, value));
     const requestHash = hashEvidence({ method: 'GET', url: url.toString() });
@@ -339,7 +386,7 @@ export class QlooClient {
         if (JSON.stringify(raw).includes(this.#apiKey)) throw new QlooError('INVALID_RESPONSE', 'Qloo response failed the safety boundary');
         const timestamp = new Date(this.#options.now()).toISOString();
         const evidence: QlooEvidence = { source: 'QLOO', endpoint, baseUrl: this.#baseUrl, requestHash, responseHash: hashEvidence(raw), fetchedAt: timestamp, servedAt: timestamp, cache: 'LIVE', attempts: attempt, httpStatus: response.httpStatus, transport: this.#transport, ...(response.harness ? { harness: response.harness } : {}) };
-        if (parseQlooEntities(raw, endpoint).status === 'complete') {
+        if (cacheable ? cacheable(raw) : parseQlooEntities(raw, endpoint).status === 'complete') {
           if (this.#cache.size >= this.#options.maxCacheEntries) this.#cache.delete(this.#cache.keys().next().value!);
           this.#cache.set(requestHash, { raw: structuredClone(raw), evidence: structuredClone(evidence), storedAt: this.#options.now() });
         }

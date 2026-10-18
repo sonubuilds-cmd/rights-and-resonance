@@ -110,3 +110,16 @@ Observed shapes that differ from the earlier synthetic fixtures:
 - `/v2/insights` returns `{success:true, results:{entities:[...]}, query:{explainability:{...}}}`. Rows use `type:"urn:entity"` with the real type in `subtype`, `query.affinity` (0-1), `query.measurements`, per-entity `query.explainability["signal.interests.entities"]` (`[{entity_id,score}]`), plus `popularity`, `tags`, `properties`, `disambiguation`.
 - **Qloo omits the signal (seed) entities from insights results.** A film that is also a cohort seed (In the Mood for Love, Blade Runner) is absent from that cohort's response. The adapter keeps it in the fixed universe with `rawAffinity: null`, `percentile: null`, `excludedAsSeed: true`; it is never scored as 0, and percentiles are computed over the remaining films. Any other missing film still makes the profile incomplete.
 - Duplicate catalogue records exist (e.g. two 2022 "Aftersun", two "Just Kids" books). Auto-mapping correctly refuses these; they are resolved by the manually reviewed `packages/qloo/fixtures/confirmed-mappings.json` (Aftersun, Akira, My Neighbour Totoro, and the Normal People and Just Kids seeds), which `pnpm probe` loads automatically and re-verifies through `/entities`.
+
+## Tag insights and Taste DNA (2026-10-18)
+
+- `QlooClient.tagInsights` calls `/v2/insights?filter.type=urn:tag` with a separate closed allowlist, `TAG_INSIGHTS_PARAMETER_ALLOWLIST`
+  (`filter.type`, `signal.interests.entities`, `filter.tag.types`, `filter.parents.types`, `take`). `take` is at most 50 (100 returns HTTP 400). Tag type must match
+  `urn:tag:<kind>:<ns>`, parent type `urn:entity:<name>`. Same origin pinning, no key in argv/URL/logs. The harness argument builder accepts only
+  `filter.type` of `urn:entity:movie` or `urn:tag`. Movie insights keep `INSIGHTS_PARAMETER_ALLOWLIST` unchanged.
+- Observed live: seeds of any domain work, but the tag types differ in value. `urn:tag:theme:qloo` gives short, human-readable, cross-domain themes (for example
+  "Emotional Growth", "Unrequited Love"); `urn:tag:keyword:media` is noisy (comedy trivia); `urn:tag:audience:qloo` is generic ("Teen-Oriented"). Taste DNA uses themes only.
+  Without `filter.tag.types` / `filter.parents.types` the result mixes places, music and amenities. Entity records (`/entities`) carry ~90-320 tags with key `tag_id`.
+- Live Taste DNA and the default programme evidence mode: see `docs/taste-contract.md`. With a key configured, new sessions start with the 30 films and 9 seeds
+  pre-confirmed from `packages/qloo/fixtures/resolved-mappings.json` (disable with `QLOO_PRECONFIRMED_MAPPINGS=off`) and `providerStatus.defaultMode` is `QLOO`;
+  `POST /api/programmes/generate` without a `mode` uses it. DEMO remains selectable.

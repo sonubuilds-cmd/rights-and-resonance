@@ -37,7 +37,7 @@ export interface AppState {
   films: Film[]; cohorts: Cohort[]; slots: Slot[]; constraints: Constraints;
   versions: ProgrammeVersion[]; events: ProgrammeEvent[]; runs: WorkflowRun[];
   affinities: AffinityMatrix; evidenceMode: EvidenceMode;
-  providerStatus: { qlooConfigured: boolean; llmConfigured: boolean; persistence: 'memory' | 'postgres'; qlooStatus: string; note: string };
+  providerStatus: { qlooConfigured: boolean; llmConfigured: boolean; persistence: 'memory' | 'postgres'; defaultMode?: EvidenceMode; qlooStatus: string; note: string };
   evidence: EvidenceSnapshot[]; evaluations: EvaluationResult[]; revision: number;
   mappings: Record<string, { entityId: string; confirmedAt: string; title: string }>;
 }

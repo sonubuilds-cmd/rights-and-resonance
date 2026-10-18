@@ -3,6 +3,7 @@ import { createDemoData, createSyntheticTasteProfile, TasteProfileSchema } from 
 import { makeServer, type FastifyInstance } from '../apps/api/src/server.js';
 import { MemoryStore } from '../apps/api/src/store.js';
 import { createInitialState } from '../apps/api/src/state.js';
+import { QlooClient } from '@rr/qloo';
 import { LiveQlooTasteSource, createTasteSource, SyntheticTasteSource } from '../apps/api/src/taste.js';
 
 describe('synthetic Taste DNA profile', () => {
@@ -61,12 +62,12 @@ describe('GET /api/taste', () => {
     const res = await app.inject({ method: 'GET', url: '/api/taste', headers: { origin: 'https://evil.example' } });
     expect(res.statusCode).toBe(403);
   });
-  it('reports unavailable (never fabricated) from the unwired live source', async () => {
-    const app = await makeServer({ store: new MemoryStore(() => createInitialState()), taste: new LiveQlooTasteSource() });
+  it('reports unavailable (never fabricated) from the live source without a key', async () => {
+    const app = await makeServer({ store: new MemoryStore(() => createInitialState()), taste: new LiveQlooTasteSource({ client: () => new QlooClient({}) }) });
     servers.push(app);
     const body = (await app.inject({ method: 'GET', url: '/api/taste' })).json();
     expect(body).toMatchObject({ source: 'QLOO_LIVE', status: 'unavailable', cohorts: [], films: [] });
-    expect(body.message).toMatch(/not wired/);
+    expect(body.message).toMatch(/QLOO_API_KEY/);
   });
   it('selects the synthetic source by default', () => {
     expect(createTasteSource({})).toBeInstanceOf(SyntheticTasteSource);

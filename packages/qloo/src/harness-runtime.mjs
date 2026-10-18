@@ -12,7 +12,12 @@ const safeResult = code => ({ ok: false, code });
 export function harnessArguments(endpoint, params) {
   if (endpoint === '/search') return ['api', 'search', '--query', params.query, '--take', params.take, '--params', JSON.stringify(params), '--json'];
   if (endpoint === '/entities') return ['api', 'entity', '--id', params.entity_ids, '--json'];
-  if (endpoint === '/v2/insights') return ['api', 'insights', '--type', 'urn:entity:movie', '--take', params.take, '--params', JSON.stringify(params), '--json'];
+  if (endpoint === '/v2/insights') {
+    // Movie candidate insights, or tag insights (filter.type=urn:tag). Anything else is refused, never passed through.
+    const type = params['filter.type'];
+    if (type !== 'urn:entity:movie' && type !== 'urn:tag') throw new Error('Unsupported insights type');
+    return ['api', 'insights', '--type', type, '--take', params.take, '--params', JSON.stringify(params), '--json'];
+  }
   throw new Error('Unsupported endpoint');
 }
 

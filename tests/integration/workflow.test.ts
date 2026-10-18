@@ -25,6 +25,7 @@ async function approve(c:Awaited<ReturnType<typeof client>>,version:ProgrammeVer
   return c.request({method:'POST',url:`/api/programmes/${version.programmeId}/approve`,payload:{versionId:version.id}});
 }
 
+process.env.QLOO_PRECONFIRMED_MAPPINGS='off'; // these tests build their own mapping states
 describe('session-scoped programme workflow',()=>{
   it('generates, explicitly approves, revokes, repairs and reapproves without mutating snapshots',async()=>{
     const c=await client();const {state,version}=await generate(c);
