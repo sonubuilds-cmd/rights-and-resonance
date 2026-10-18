@@ -11,6 +11,7 @@ import { QlooError } from '@rr/qloo';
 import { MemoryStore, PostgresStore, type StateStore } from './store.js';
 import { createInitialState, currentProviderConfiguration } from './state.js';
 import { generateProgramme, currentViolations } from './workflow.js';
+import { createTasteSource, type TasteDnaSource } from './taste.js';
 import { collectAffinities, qloo, recordEvidence, EvidenceCollectionError } from './evidence.js';
 import type { AppState, ProgrammeEvent, ProgrammeVersion, EvidenceMode } from './types.js';
 
@@ -68,7 +69,7 @@ async function applyChange(state:AppState,type:string,payload:Record<string,unkn
   return state;
 }
 
-export async function makeServer(options:{store?:StateStore;logger?:boolean}={}) {
+export async function makeServer(options:{store?:StateStore;logger?:boolean;taste?:TasteDnaSource}={}) {
   const app=Fastify({logger:options.logger ?? false,bodyLimit:256*1024,trustProxy:false});
   const allowed=new Set((process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173,http://localhost:3001,http://127.0.0.1:5173,http://127.0.0.1:3001').split(',').map(s=>s.trim()).filter(Boolean));
   await app.register(cookie);
@@ -114,6 +115,9 @@ export async function makeServer(options:{store?:StateStore;logger?:boolean}={})
   app.get('/healthz',async()=>({ok:true,persistence:data.kind}));
   app.get('/api/state',async req=>data.read(sessionId(req)));
   // Inspect local configuration and installed transport capabilities only. Never probe Qloo here.
+  // Taste DNA: provider seam in ./taste.ts. Same origin/session hooks as every other route.
+  const tasteSource=options.taste ?? createTasteSource();
+  app.get('/api/taste',async()=>tasteSource.load());
   app.get('/api/qloo/readiness',async()=>qloo().readiness());
   app.post('/api/demo/reset',async req=>data.reset(sessionId(req)));
   app.get('/api/films',async req=>{const s=await data.read(sessionId(req));return{films:s.films,eligibility:s.films.flatMap(f=>s.slots.map(slot=>{const reasons=filmEligibility(f,slot,s.constraints);return{filmId:f.id,slotId:slot.id,eligible:reasons.length===0,reasons};}))};});

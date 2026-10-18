@@ -1,3 +1,5 @@
+import type { TasteProfile } from '@rr/domain';
+export type { TasteProfile, TasteTag } from '@rr/domain';
 import type { AppState } from '../../api/src/types';
 import type { QlooReadiness } from '@rr/qloo';
 export type { QlooReadiness } from '@rr/qloo';
@@ -25,3 +27,5 @@ export async function downloadExport(versionId: string, kind: 'export' | 'rights
   const filename = disposition?.match(/filename="?([^";]+)"?/)?.[1] ?? `rights-resonance-${versionId}.${kind === 'export' ? 'json' : 'txt'}`;
   const url = URL.createObjectURL(blob); const anchor = document.createElement('a'); anchor.href = url; anchor.download = filename; document.body.append(anchor); anchor.click(); anchor.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+/** Taste DNA: why each recommendation fits. Source is labelled SYNTHETIC_DEMO unless live Qloo is wired. */
+export const getTaste = (signal?: AbortSignal) => request<TasteProfile>('/api/taste', { signal });

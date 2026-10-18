@@ -27,3 +27,12 @@ type TasteProfile = {
 Rules: never fabricate live data; when no key, return `SYNTHETIC_DEMO` built from
 the demo fixture and labelled as such. Rank/affinity values are relative group
 tendencies, not attendance predictions.
+
+## Implementation notes (v0.3)
+
+- Types and the deterministic synthetic builder: `packages/domain/src/taste.ts` (`createSyntheticTasteProfile`, `TasteProfileSchema`).
+- Provider seam: `apps/api/src/taste.ts` (`TasteDnaSource { load(): Promise<TasteProfile> }`). Default is `SyntheticTasteSource`.
+  `TASTE_SOURCE=qloo` selects `LiveQlooTasteSource`, a stub returning `status: 'unavailable'`. **Live plug-in point:** implement
+  `LiveQlooTasteSource.load()` there using `@rr/qloo`; it must return `source: 'QLOO_LIVE'` and never synthesise values.
+- `GET /api/taste` shares the global Origin allowlist, session cookie and `Cache-Control: no-store` hooks.
+- Web: `apps/web/src/TasteDna.tsx` ("Taste DNA" surface and the "Why this film" block on each programme row).
