@@ -1,0 +1,40 @@
+/* Taste DNA (v0.3). Uses the tokens from styles.css (--line, --white, --accent, --green, --serif, --mono). */
+.hue-0{--hue:#c34e2f;--hue-bg:#f5e6df}.hue-1{--hue:#45604c;--hue-bg:#e6ede4}.hue-2{--hue:#4a5f86;--hue-bg:#e4e9f2}
+.source-badge{font-weight:600;letter-spacing:.08em}
+.taste-banner{border:1px solid var(--line);background:var(--white);border-radius:3px;padding:20px 22px;margin:0 0 20px;border-left:4px solid var(--accent)}
+.taste-banner.live{border-left-color:var(--green)}
+.taste-banner-main{display:flex;gap:16px;align-items:flex-start}.taste-banner-main>svg{width:30px;height:30px;flex:none;color:var(--accent);stroke-width:1.3}
+.taste-banner-main>div{flex:1;min-width:0}.taste-banner h2{font-family:var(--serif);font-weight:400;font-size:27px;margin:0 0 6px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.taste-banner p{margin:0;font-size:12px;line-height:1.6;color:var(--muted);max-width:70ch}
+.taste-workflow{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line)}.taste-workflow .eyebrow{margin-bottom:8px}
+.taste-workflow ol{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.taste-workflow li{display:inline-flex;align-items:center;gap:8px;background:#efeee7;border-radius:2px;padding:5px 9px;max-width:100%}
+.taste-workflow code{font-family:var(--mono);font-size:10px;overflow-wrap:anywhere}
+.step-n{font-family:var(--mono);font-size:9px;color:#fff;background:var(--ink);border-radius:50%;width:16px;height:16px;display:inline-grid;place-items:center;flex:none}
+.taste-cohorts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:16px}
+.taste-cohort{background:var(--white);border:1px solid var(--line);border-top:3px solid var(--hue);border-radius:3px;padding:18px 18px 20px}
+.taste-cohort header{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.taste-cohort h3{font-family:var(--serif);font-weight:400;font-size:23px;margin:0}
+.taste-count{font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.taste-cohort>p{font-size:11px;line-height:1.55;color:var(--muted);margin:6px 0 14px}
+.taste-chips,.why-tags,.why-links{list-style:none;margin:0;padding:0}
+.taste-chips{display:flex;flex-wrap:wrap;gap:7px}
+.taste-chip{position:relative;display:inline-flex;align-items:center;gap:8px;overflow:hidden;border:1px solid color-mix(in srgb,var(--hue) 35%,transparent);background:var(--hue-bg);border-radius:999px;padding:5px 10px 5px 12px;font-size:12px;line-height:1.2}
+.taste-chip-bar{position:absolute;left:0;bottom:0;height:2px;width:calc(var(--w)*100%);background:var(--hue)}
+.taste-chip-name{position:relative;text-transform:capitalize;font-weight:500}
+.taste-chip-w{position:relative;font-family:var(--mono);font-size:9px;color:var(--hue)}
+.taste-chip:nth-child(-n+3){background:var(--hue);color:#fff;border-color:var(--hue)}
+.taste-chip:nth-child(-n+3) .taste-chip-w{color:#fff;opacity:.8}
+.taste-chip:nth-child(-n+3) .taste-chip-bar{background:#fff;opacity:.5}
+.why-film{margin:12px 0 4px;padding:11px 14px;background:#f8f5ec;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:2px;max-width:640px}
+.why-film-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.why-film-head>svg{width:14px;height:14px;color:var(--accent)}
+.why-label{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:500}
+.why-text{margin:6px 0 8px;font-size:13px;line-height:1.5;color:var(--ink)}
+.why-links{display:flex;flex-direction:column;gap:6px}
+.why-link{display:flex;gap:8px 10px;align-items:center;flex-wrap:wrap}
+.why-cohort{font-size:10px;font-weight:600;color:var(--hue);min-width:0}
+.why-cohort:before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--hue);margin-right:6px}
+.why-tags{display:flex;flex-wrap:wrap;gap:5px}
+.why-tags li{font-size:11px;padding:2px 9px;border-radius:999px;background:var(--hue-bg);color:var(--hue);border:1px solid color-mix(in srgb,var(--hue) 30%,transparent);text-transform:capitalize}
+.why-note{margin:8px 0 0;font-size:9px;color:var(--muted);font-style:italic}
+@media(max-width:720px){.taste-banner{padding:16px}.taste-banner-main{flex-wrap:wrap}.taste-banner-main>svg{width:24px;height:24px}.taste-banner h2{font-size:23px}.taste-banner-main>.button{margin-left:40px}.why-film{padding:10px 11px}.taste-workflow li{width:100%}}

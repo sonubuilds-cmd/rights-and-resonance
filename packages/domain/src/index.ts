@@ -129,3 +129,4 @@ export function createDemoData(): DemoData {
   return {cinema,films,cohorts,slots,constraints:{territory:'GB',budgetPence:185000},affinities,evidenceMode:'DEMO',notice:DEMO_NOTICE};
 }
 export const DemoDataSchema = z.object({cinema:CinemaSchema,films:z.array(FilmSchema),cohorts:z.array(CohortSchema),slots:z.array(ScreeningSlotSchema),constraints:ConstraintsSchema,affinities:AffinityMatrixSchema,evidenceMode:z.literal('DEMO'),notice:z.string()});
+export * from './taste';
