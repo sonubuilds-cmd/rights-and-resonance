@@ -1,6 +1,7 @@
 import { createDemoData } from '@rr/domain';
 import { rankNormalizeAffinities } from '@rr/solver';
 import type { AppState, EvidenceMode } from './types.js';
+import { liveVerification } from './live-status.js';
 import { loadResolvedMappings } from './taste-live.js';
 
 /** Live Qloo mappings pre-confirmed from the recorded probe fixture; only used when a server-side key is configured. */
@@ -14,6 +15,7 @@ export function currentProviderConfiguration() {
   return {
     qlooConfigured: Boolean(process.env.QLOO_API_KEY?.trim()),
     llmConfigured: Boolean(process.env.LLM_API_KEY?.trim() && process.env.LLM_MODEL?.trim()),
+    qlooVerifiedAt: liveVerification()?.at, qlooVerifiedVia: liveVerification()?.via,
   };
 }
 export function createInitialState(persistence: 'memory' | 'postgres' = 'memory'): AppState {

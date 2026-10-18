@@ -153,3 +153,22 @@ describe('repair policy',()=>{
     expect(repaired.changes).toBe(1);expect(repaired.items[1]!.filmId).toBe('d');expect(validateProgramme(input,repaired.items)).toEqual([]);
   });
 });
+
+describe('seed-film handling (unknown for its own cohort only)',()=>{
+  it('ranks the other films, skips the seed film in that cohort coverage and never zero-fills',()=>{
+    const input=small(4,4);const [c0,c1]=[input.cohorts[0]!.id,input.cohorts[1]!.id];
+    input.affinities={[c0]:{a:null,b:0.2,c:0.9,d:0.5},[c1]:{a:0.1,b:0.4,c:0.3,d:0.8}};
+    expect(solveProgramme(input).status).toBe('INCOMPLETE_EVIDENCE');
+    input.seedExcluded={[c0]:['a']};
+    const norm=rankNormalizeAffinities(input.films,input.cohorts,input.affinities,input.seedExcluded);
+    expect(norm.missing).toEqual([]);expect(norm.matrix[c0]).toEqual({a:null,b:0,c:1,d:0.5});
+    const result=solveProgramme(input);expect(result.status).toBe('OPTIMAL');
+    const cov=evaluateProgramme(input.slots.map((s,i)=>({slotId:s.id,filmId:input.films[i]!.id,feePence:input.films[i]!.rights.feePence})),input.films,input.cohorts,norm.matrix,1e9,input.seedExcluded);
+    expect(cov.coverage[0]!.topFilmIds).not.toContain('a');
+  });
+  it('a null that is not a declared seed still blocks the solve',()=>{
+    const input=small(4,4);const c0=input.cohorts[0]!.id;
+    input.affinities={...input.affinities,[c0]:{a:0.1,b:null,c:0.9,d:0.5}};input.seedExcluded={[c0]:['a']};
+    expect(solveProgramme(input).status).toBe('INCOMPLETE_EVIDENCE');
+  });
+});

@@ -17,11 +17,15 @@ export const SolveInputSchema = z.object({
   slots: z.array(ScreeningSlotSchema).min(1).max(MAX_SLOTS),
   constraints: ConstraintsSchema, affinities: AffinityMatrixSchema,
   locks: z.array(ProgrammeLockSchema).max(MAX_SLOTS).optional(),
+  seedExcluded: z.record(z.string(), z.array(z.string())).optional(),
   repair: z.object({previousItems:z.array(ProgrammeItemSchema),policy:z.enum(['MINIMAL_CHANGE','GLOBAL_FAIRNESS'])}).optional(),
 });
+export type SeedExcluded = Record<string,string[]>;
 export type SolveInput = {
   films: Film[]; cohorts: Cohort[]; slots: ScreeningSlot[]; constraints: Constraints;
   affinities: AffinityMatrix; locks?: ProgrammeLock[];
+  /** cohortId -> film ids that are themselves seeds of that cohort. Their affinity is unknown (null) by construction and is skipped for that cohort, never zero-filled. */
+  seedExcluded?: SeedExcluded;
   repair?: {previousItems: ProgrammeItem[]; policy:'MINIMAL_CHANGE'|'GLOBAL_FAIRNESS'};
 };
 export type SolverDiagnostics = {
@@ -89,20 +93,24 @@ function structuralErrors(input:SolveInput):string[] {
  * Lowest rank=0, highest=1; ties receive their average rank; a singleton receives 0.5.
  * Missing/null/non-finite scores are unknown, never silently imputed as zero.
  */
-export function rankNormalizeAffinities(films:Film[],cohorts:Cohort[],affinities:AffinityMatrix):{
+export function rankNormalizeAffinities(films:Film[],cohorts:Cohort[],affinities:AffinityMatrix,seedExcluded:SeedExcluded={}):{
   matrix:AffinityMatrix;missing:Array<{cohortId:string;filmId:string}>;
 } {
   const matrix:AffinityMatrix={},missing:Array<{cohortId:string;filmId:string}>=[];
   for(const cohort of cohorts) {
     const row:Record<string,number|null>={};matrix[cohort.id]=row;
     const known:Array<{filmId:string;value:number}>=[];
+    const seeds=new Set(seedExcluded[cohort.id]??[]);
     for(const film of films) {
       const value=affinities[cohort.id]?.[film.id];
+      // A declared seed film is expected to be unscored (Qloo never scores a seed against itself): unknown for this cohort only, not missing evidence.
+      if(seeds.has(film.id)&&(value===null||value===undefined)) {row[film.id]=null;continue;}
       if(typeof value!=='number'||!Number.isFinite(value)) {missing.push({cohortId:cohort.id,filmId:film.id});row[film.id]=null;}
       else known.push({filmId:film.id,value});
     }
     // Never normalize a partial response on a smaller universe: the entire row stays unknown.
-    if(known.length!==films.length) {for(const film of films) row[film.id]=null;continue;}
+    const seedCount=films.filter(f=>row[f.id]===null&&seeds.has(f.id)).length;
+    if(known.length+seedCount!==films.length||known.length===0) {for(const film of films) row[film.id]=null;continue;}
     known.sort((a,b)=>a.value-b.value||compareIds(a.filmId,b.filmId));
     for(let start=0;start<known.length;) {
       let end=start+1;while(end<known.length&&known[end]!.value===known[start]!.value)end++;
@@ -141,11 +149,14 @@ export function validateProgramme(input:SolveInput,items:ProgrammeItem[]):string
 
 /** Lexicographic programme objective. Coverage averages the best two selected films per cohort. */
 export function evaluateProgramme(
-  items:ProgrammeItem[],films:Film[],cohorts:Cohort[],normalized:AffinityMatrix,budgetPence:number,
+  items:ProgrammeItem[],films:Film[],cohorts:Cohort[],normalized:AffinityMatrix,budgetPence:number,seedExcluded:SeedExcluded={},
 ):{coverage:CohortCoverage[];objective:ProgrammeObjective;totalCostPence:number} {
   const byId=new Map(films.map(f=>[f.id,f]));
   const coverage:CohortCoverage[]=cohorts.map(cohort=>{
-    const ranked=items.map(item=>({filmId:item.filmId,score:normalized[cohort.id]?.[item.filmId]}));
+    const seeds=new Set(seedExcluded[cohort.id]??[]);
+    // Seed films are unknown for their own cohort and skipped there; every other cell must be a real score.
+    const ranked=items.filter(item=>!(seeds.has(item.filmId)&&normalized[cohort.id]?.[item.filmId]===null)).map(item=>({filmId:item.filmId,score:normalized[cohort.id]?.[item.filmId]}));
+    if(ranked.length===0)throw new Error(`No scored film in the programme for ${cohort.id}`);
     if(ranked.some(item=>typeof item.score!=='number'||!Number.isFinite(item.score)))throw new Error(`Incomplete normalized evidence for ${cohort.id}`);
     ranked.sort((a,b)=>(b.score as number)-(a.score as number)||compareIds(a.filmId,b.filmId));
     const top=ranked.slice(0,2);
@@ -167,7 +178,7 @@ export function solveProgramme(rawInput:SolveInput):SolveResult {
   diagnostics.candidateUniverseIds=films.map(film=>film.id);
   const errors=structuralErrors(input);
   if(errors.length)return {status:'INVALID_INPUT',reason:errors.join('; '),diagnostics};
-  const normalized=rankNormalizeAffinities(films,input.cohorts,input.affinities);
+  const normalized=rankNormalizeAffinities(films,input.cohorts,input.affinities,input.seedExcluded);
   diagnostics.missingEvidence=normalized.missing;
   for(const slot of slots) {
     diagnostics.eligibleBySlot[slot.id]=[];diagnostics.excludedBySlot[slot.id]={};
@@ -202,7 +213,7 @@ export function solveProgramme(rawInput:SolveInput):SolveResult {
       diagnostics.assignmentsEvaluated++;
       const setKey=JSON.stringify([...used].sort(compareIds));
       let evaluated=objectiveCache.get(setKey);
-      if(!evaluated) {evaluated=evaluateProgramme(selected,films,input.cohorts,normalized.matrix,input.constraints.budgetPence);objectiveCache.set(setKey,evaluated);}
+      if(!evaluated) {evaluated=evaluateProgramme(selected,films,input.cohorts,normalized.matrix,input.constraints.budgetPence,input.seedExcluded);objectiveCache.set(setKey,evaluated);}
       const changes=input.repair?selected.filter(item=>previous.get(item.slotId)!==item.filmId).length:0;
       const key=JSON.stringify(selected.map(item=>[item.slotId,item.filmId]));
       const result={...evaluated,changes};

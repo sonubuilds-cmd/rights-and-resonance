@@ -3,6 +3,7 @@ import type {FastifyInstance,InjectOptions} from '../../apps/api/src/server.js';
 import { makeServer } from '../../apps/api/src/server.js';
 import {randomUUID} from 'node:crypto';
 import {qloo} from '../../apps/api/src/evidence.js';
+import {resetLiveVerification} from '../../apps/api/src/live-status.js';
 import {MemoryStore} from '../../apps/api/src/store.js';
 import {createInitialState} from '../../apps/api/src/state.js';
 import type {QlooInsightsResult,QlooResult} from '@rr/qloo';
@@ -126,6 +127,35 @@ describe('live-provider boundary guards using mocks only',()=>{
     expect(state.runs.at(-1)?.evidenceId).toBe(evidence.id);
     expect(Object.values(evidence.affinities).flatMap(Object.values).every(value=>value===null)).toBe(true);
     expect((await c.request({method:'GET',url:`/api/evidence/${evidence.id}`})).statusCode).toBe(200);
+  });
+  it('treats a catalogue film that is also a cohort seed as unknown-for-that-cohort, not incomplete and not zero',async()=>{
+    vi.stubEnv('QLOO_API_KEY','test-key-never-sent');resetLiveVerification();
+    const seedFilmIndex=0;
+    const c=await client(()=>{const state=mappedState();state.cohorts[0]!.seeds[0]!.entityId=state.films[seedFilmIndex]!.qlooEntityId!;return state;});
+    const provider=vi.spyOn(qloo(),'insights').mockImplementation(async request=>{
+      const seeds=new Set(request.seedEntityIds);const known=request.candidateEntityIds.filter(id=>!seeds.has(id));
+      const rows=request.candidateEntityIds.map(entityId=>seeds.has(entityId)?{entityId,rawAffinity:null,percentile:null,excludedAsSeed:true}:{entityId,rawAffinity:0.5,percentile:known.indexOf(entityId)/(known.length-1)});
+      return {...insights(request.candidateEntityIds),rows,missingEntityIds:[],complete:true};
+    });
+    const response=await c.request({method:'POST',url:'/api/programmes/generate',payload:{mode:'QLOO'}});
+    expect(response.statusCode,response.body).toBe(200);expect(provider).toHaveBeenCalledTimes(3);
+    const state=response.json<AppState>();const evidence=state.evidence.at(-1)!;const seedFilm=state.films[seedFilmIndex]!;
+    expect(evidence.status).toBe('COMPLETE');expect(evidence.seedExcluded).toEqual({[state.cohorts[0]!.id]:[seedFilm.id]});
+    expect(evidence.affinities[state.cohorts[0]!.id]![seedFilm.id]).toBeNull();
+    expect(evidence.affinities[state.cohorts[1]!.id]![seedFilm.id]).not.toBeNull();
+    expect(evidence.warnings.join(' ')).toContain("doesn't score a seed against itself");
+    const version=state.versions.at(-1)!;expect(version.items).toHaveLength(4);
+    expect(version.coverage.every(cv=>Number.isFinite(cv.score))).toBe(true);
+    expect(state.providerStatus.qlooVerifiedAt).toBeTruthy();expect(state.providerStatus.qlooVerifiedVia).toBe('EVIDENCE');
+  });
+  it('still blocks when a non-seed film lacks Qloo affinity, and does not mark live verified',async()=>{
+    vi.stubEnv('QLOO_API_KEY','test-key-never-sent');resetLiveVerification();
+    const c=await client(()=>mappedState());
+    vi.spyOn(qloo(),'insights').mockImplementation(async request=>{
+      const r=insights(request.candidateEntityIds);r.rows[3]={entityId:r.rows[3]!.entityId,rawAffinity:null,percentile:null};return r;
+    });
+    const response=await c.request({method:'POST',url:'/api/programmes/generate',payload:{mode:'QLOO'}});
+    expect(response.statusCode).toBe(422);expect(response.json().state.providerStatus.qlooVerifiedAt).toBeUndefined();
   });
   it('invalidates current approval when a fresh complete Qloo profile changes ranks',async()=>{
     vi.stubEnv('QLOO_API_KEY','test-key-never-sent');const c=await client(()=>mappedState());

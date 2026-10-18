@@ -27,7 +27,7 @@ function solverInput(ctx: GenerationContext) {
   const {state} = ctx;
   return {
     films:ctx.mode === 'QLOO' ? state.films.filter(f=>ctx.evidence!.candidateFilmIds.includes(f.id)) : state.films,cohorts:state.cohorts,slots:state.slots,constraints:state.constraints,
-    affinities:ctx.evidence!.affinities,
+    affinities:ctx.evidence!.affinities,...(ctx.evidence!.seedExcluded&&Object.keys(ctx.evidence!.seedExcluded).length?{seedExcluded:ctx.evidence!.seedExcluded}:{}),
     ...(ctx.parent && ctx.run.trigger === 'REPAIR' ? {repair:{previousItems:ctx.parent.items,policy:ctx.repairPolicy ?? 'MINIMAL_CHANGE' as const}} : {}),
   };
 }

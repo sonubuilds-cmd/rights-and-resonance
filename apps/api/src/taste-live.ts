@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { markLiveVerified } from './live-status.js';
 import { createDemoData, type TasteProfile, type TasteTag } from '@rr/domain';
 import { QlooClient, QlooError, extractEntityTags, type EntityTag, type QlooEvidence, type QlooTag } from '@rr/qloo';
 
@@ -163,6 +164,7 @@ export class LiveQlooTasteSource {
         } catch (error) { warnings.push(`${cohort.name} film ranking failed (${error instanceof QlooError ? error.code : 'ERROR'}).`); }
       }
     }
+    if (evidence.length && evidence.some(e => e.cache === 'LIVE') && !evidence.some(e => e.cache === 'STALE_CACHE')) markLiveVerified('TASTE');
     const cached = evidence.filter(e => e.cache !== 'LIVE').length;
     workflow.push(`qloo api /v2/insights (urn:tag, ${THEME_TAG_TYPE}, ${demo.cohorts.length} cohorts)`, `qloo api /v2/insights (urn:entity:movie fixed universe, ${demo.cohorts.length} cohort ranks)`,
       'local: tag-id intersection of film and cohort tags; deterministic template sentence (no LLM)');

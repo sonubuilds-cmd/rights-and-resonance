@@ -24,6 +24,8 @@ export interface EvidenceSnapshot {
   candidateFilmIds: string[]; excludedFilmIds: string[]; affinities: AffinityMatrix; normalizedAffinities: AffinityMatrix; inputRevision: number;
   inputs: { films: Film[]; cohorts: Cohort[]; slots: Slot[]; constraints: Constraints };
   providerResponses: unknown[]; warnings: string[]; claim: string;
+  /** cohortId -> catalogue films that are seeds of that cohort: unscored by Qloo (unknown, never zero) and skipped for that cohort. */
+  seedExcluded?: Record<string, string[]>;
 }
 export interface ProgrammeEvent {
   id: string; createdAt: string; type: string; payload: Record<string, unknown>;
@@ -37,7 +39,7 @@ export interface AppState {
   films: Film[]; cohorts: Cohort[]; slots: Slot[]; constraints: Constraints;
   versions: ProgrammeVersion[]; events: ProgrammeEvent[]; runs: WorkflowRun[];
   affinities: AffinityMatrix; evidenceMode: EvidenceMode;
-  providerStatus: { qlooConfigured: boolean; llmConfigured: boolean; persistence: 'memory' | 'postgres'; defaultMode?: EvidenceMode; qlooStatus: string; note: string };
+  providerStatus: { qlooConfigured: boolean; llmConfigured: boolean; qlooVerifiedAt?: string; qlooVerifiedVia?: 'EVIDENCE' | 'TASTE'; persistence: 'memory' | 'postgres'; defaultMode?: EvidenceMode; qlooStatus: string; note: string };
   evidence: EvidenceSnapshot[]; evaluations: EvaluationResult[]; revision: number;
   mappings: Record<string, { entityId: string; confirmedAt: string; title: string }>;
 }

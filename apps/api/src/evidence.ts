@@ -2,11 +2,12 @@ import { createHash, randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { createDemoData, type AffinityMatrix } from '@rr/domain';
 import { QlooClient, QlooError } from '@rr/qloo';
+import { markLiveVerified } from './live-status.js';
 import type { AppState, EvidenceMode, EvidenceSnapshot } from './types.js';
 
 let qlooClient: QlooClient | undefined;
 export const qloo = () => qlooClient ??= new QlooClient({ apiKey: process.env.QLOO_API_KEY, baseUrl: process.env.QLOO_BASE_URL, transport: process.env.QLOO_TRANSPORT, timeoutMs: Number(process.env.QLOO_TIMEOUT_MS ?? 10000), cacheTtlMs: Number(process.env.QLOO_CACHE_TTL_MS ?? 900000), retryBudgetMs: Number(process.env.QLOO_RETRY_BUDGET_MS ?? 5000) });
-export interface AffinityEvidence { affinities: AffinityMatrix; providerResponses: unknown[]; warnings: string[]; sourceLabel: string; synthetic: boolean }
+export interface AffinityEvidence { affinities: AffinityMatrix; providerResponses: unknown[]; warnings: string[]; sourceLabel: string; synthetic: boolean; seedExcluded?: Record<string, string[]> }
 export class EvidenceCollectionError extends Error {
   constructor(message:string,readonly evidence:AffinityEvidence) {super(message);}
 }
@@ -53,7 +54,7 @@ export async function collectAffinities(state: AppState, mode: EvidenceMode): Pr
   }
   if (mode === 'QLOO') {
     const affinities: AffinityMatrix = Object.fromEntries(state.cohorts.map(c=>[c.id,Object.fromEntries(state.films.map(f=>[f.id,null]))]));
-    const providerResponses: unknown[] = []; const warnings: string[] = [];
+    const providerResponses: unknown[] = []; const warnings: string[] = []; const seedExcluded: Record<string, string[]> = {};
     try {
       if (!process.env.QLOO_API_KEY?.trim()) throw new Error('QLOO_NOT_CONFIGURED: Add a server-side QLOO_API_KEY to enable live evidence. Demo evidence cannot substitute for Qloo.');
       const unmapped = state.films.filter(f=>!f.qlooEntityId || f.mappingStatus !== 'CONFIRMED');
@@ -73,13 +74,21 @@ export async function collectAffinities(state: AppState, mode: EvidenceMode): Pr
         }
         providerResponses.push({cohortId:cohort.id,...response}); warnings.push(...response.warnings);
         const values = new Map(response.rows.map(row=>[row.entityId,row.percentile]));
+        // Qloo never scores a seed against itself. A catalogue film that is also a seed of this cohort is unknown for this cohort only.
+        const seedRows = new Set(response.rows.filter(r=>r.excludedAsSeed).map(r=>r.entityId));
+        const seedFilms = state.films.filter(f=>f.qlooEntityId && seedRows.has(f.qlooEntityId.toLowerCase()));
         affinities[cohort.id] = Object.fromEntries(state.films.map(f=>[f.id,values.get(f.qlooEntityId!) ?? null]));
-        if (!response.complete || response.status !== 'complete' || response.evidence.cache === 'STALE_CACHE' || response.rows.some(r=>r.percentile === null)) throw new Error(`QLOO_INCOMPLETE_EVIDENCE: ${cohort.name} has missing, partial or stale affinity evidence. Solve blocked; missing scores are never zero-filled.`);
+        if (seedFilms.length) {
+          seedExcluded[cohort.id] = seedFilms.map(f=>f.id).sort();
+          warnings.push(`${cohort.name}: seed film ${seedFilms.map(f=>f.title).join(', ')} — Qloo doesn't score a seed against itself; unknown for this cohort, excluded from its coverage (never zero-filled).`);
+        }
+        if (!response.complete || response.status !== 'complete' || response.evidence.cache === 'STALE_CACHE' || response.rows.some(r=>r.percentile === null && !r.excludedAsSeed)) throw new Error(`QLOO_INCOMPLETE_EVIDENCE: ${cohort.name} has missing, partial or stale affinity evidence. Solve blocked; missing scores are never zero-filled.`);
       }
-      return {affinities,providerResponses,warnings,sourceLabel:'QLOO_API_FIXED_UNIVERSE_RANKS',synthetic:false};
+      markLiveVerified('EVIDENCE');
+      return {affinities,providerResponses,warnings,sourceLabel:'QLOO_API_FIXED_UNIVERSE_RANKS',synthetic:false,seedExcluded};
     } catch(error) {
       const message=error instanceof Error?error.message:'Qloo evidence unavailable';
-      throw new EvidenceCollectionError(message,{affinities,providerResponses,warnings:[...warnings,message],sourceLabel:'QLOO_BLOCKED_EVIDENCE',synthetic:false});
+      throw new EvidenceCollectionError(message,{affinities,providerResponses,warnings:[...warnings,message],sourceLabel:'QLOO_BLOCKED_EVIDENCE',synthetic:false,seedExcluded});
     }
   }
   if (!process.env.LLM_API_KEY || !process.env.LLM_MODEL) throw new Error('LLM_NOT_CONFIGURED: LLM_ONLY requires server-side LLM_API_KEY and LLM_MODEL. No simulated LLM scores are returned.');
