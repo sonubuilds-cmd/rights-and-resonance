@@ -2,7 +2,9 @@
 
 A cinema-programming workstation that assembles a feasible four-screening slate, shows its evidence, asks a person to approve it, and repairs it when the inputs change.
 
-**This repository is a standalone local synthetic demo.** All included rights availability, licence fees and cohort affinities are invented. They are not Qloo responses, rights clearance, bookings or evidence of audience demand. The live Qloo feasibility gate is **unverified without an API key**. An implemented adapter is not proof of live account access or provider coverage.
+**Live Qloo gate: passed (18 October 2026)** against `https://hackathon.api.qloo.com`: 30/30 films mapped, 9/9 cross-domain cohort seeds resolved, 3 complete and distinct cohort profiles. With `QLOO_API_KEY` set on the server, the app defaults to **QLOO mode**: cohort affinities, Taste DNA themes and every "Why this film" line come from live Qloo responses. Without a key it falls back to a clearly labelled synthetic **DEMO** mode.
+
+Rights availability and licence fees are always synthetic. Qloo affinity describes what groups tend to like; it is not rights clearance, a booking, or an attendance forecast. See [devpost-submission.md](docs/devpost-submission.md) for the full request-to-result walkthrough.
 
 See the [v0.2.1 change summary](docs/changes-v0.2.1.md), [Windows quick start](docs/windows-quick-start.md), and [validation record](docs/validation.md) for the checks actually performed. The [v0.2.0 changes](docs/changes-v0.2.0.md) document the official harness integration.
 
@@ -53,7 +55,7 @@ pnpm test         # unit/integration tests
 pnpm test:http    # real loopback HTTP synthetic workflow, starts/stops its own API
 pnpm typecheck    # strict TypeScript checks
 pnpm build        # web production bundle in apps/web/dist
-pnpm start        # API only; web hosting is separate
+pnpm start        # API; also serves apps/web/dist on the same origin when built
 pnpm seed         # initialise/reset an isolated CLI demo session; API must be running
 pnpm probe        # Qloo feasibility probe; no-key result is UNVERIFIED
 pnpm test:e2e     # browser suite; requires the Playwright browser runtime
