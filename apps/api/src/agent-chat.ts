@@ -86,7 +86,10 @@ export function createGeminiGenerate(apiKey: string, options: { fetchImpl?: type
   const doFetch = options.fetchImpl ?? fetch;
   const baseUrl = (options.baseUrl ?? 'https://generativelanguage.googleapis.com/v1beta').replace(/\/$/, '');
   const timeoutMs = options.requestTimeoutMs ?? 40_000;
-  return async request => {
+  // New API keys may not see older model ids; on a 404 fall back once to Google's maintained Flash alias.
+  let substitute: string | undefined;
+  const generate: GenerateFn = async incoming => {
+    const request = substitute ? { ...incoming, model: substitute } : incoming;
     const body = {
       systemInstruction: { parts: [{ text: request.systemInstruction }] },
       contents: request.contents,
@@ -107,6 +110,7 @@ export function createGeminiGenerate(apiKey: string, options: { fetchImpl?: type
     }
     if (!res.ok) {
       const status = res.status;
+      if (status === 404 && !substitute && request.model !== FALLBACK_MODEL) { substitute = FALLBACK_MODEL; return generate(incoming); }
       throw geminiError(status === 429 ? 'rate_limit' : status === 401 || status === 403 ? 'auth' : status === 404 ? 'model_not_found' : status >= 500 ? 'unavailable' : 'bad_request', status);
     }
     let json: { candidates?: Array<{ content?: GeminiContent; finishReason?: string }>; promptFeedback?: { blockReason?: string } };
@@ -114,7 +118,9 @@ export function createGeminiGenerate(apiKey: string, options: { fetchImpl?: type
     const candidate = json.candidates?.[0];
     return { content: candidate?.content, finishReason: candidate?.finishReason, blockReason: json.promptFeedback?.blockReason };
   };
+  return generate;
 }
+const FALLBACK_MODEL = 'gemini-flash-latest';
 
 // ---------- configuration ----------
 export interface AgentConfig {
