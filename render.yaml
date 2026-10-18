@@ -1,9 +1,11 @@
-# Optional API hosting template. Applying it may incur provider charges.
-# Web is deployed separately (e.g. Cloudflare Pages); no database is created here.
+# Single free-tier Render web service: one Docker container serves the UI and /api
+# on the same origin (no CORS, no cross-site cookies). No database is created.
+# Applying this may incur charges if you change the plan; check Render's current terms.
 services:
   - type: web
-    name: rights-and-resonance-api
+    name: rights-and-resonance
     runtime: docker
+    plan: free
     dockerfilePath: ./Dockerfile
     dockerContext: .
     healthCheckPath: /healthz
@@ -13,19 +15,22 @@ services:
         value: production
       - key: HOST
         value: 0.0.0.0
-      - key: PORT
-        value: 3001
+      - key: SERVE_WEB
+        value: "true"
       - key: QLOO_TRANSPORT
         value: harness
       - key: QLOO_BASE_URL
         value: https://hackathon.api.qloo.com
+      # Secret: paste in the Render dashboard. Omit it and the live Qloo gate stays UNVERIFIED.
+      - key: QLOO_API_KEY
+        sync: false
+      # The service's own public URL, e.g. https://rights-and-resonance.onrender.com
+      # (scheme + host, no path or trailing slash). Same-origin requests carry this Origin.
       - key: ALLOWED_ORIGINS
         sync: false
-      # none is necessary for Pages and API on unrelated hostnames.
-      # Same-site custom domains may use lax instead; see docs/deployment.md.
       - key: COOKIE_SECURE
         value: "true"
       - key: COOKIE_SAME_SITE
-        value: none
-# Add DATABASE_URL and provider keys in the service's secret settings only.
-# Without DATABASE_URL state is demo-only and disappears on restart.
+        value: lax
+# Render injects PORT. Without DATABASE_URL, state is in memory and resets on restart;
+# free services also spin down when idle, so open the URL once before a demo.

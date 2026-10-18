@@ -13,6 +13,7 @@ import { createInitialState, currentProviderConfiguration, defaultEvidenceMode }
 import { generateProgramme, currentViolations } from './workflow.js';
 import { createTasteSource, type TasteDnaSource } from './taste.js';
 import { collectAffinities, qloo, recordEvidence, EvidenceCollectionError } from './evidence.js';
+import { registerWebHost, resolveWebRoot, isWebPath } from './static.js';
 import type { AppState, ProgrammeEvent, ProgrammeVersion, EvidenceMode } from './types.js';
 
 class ApiError extends Error { constructor(readonly statusCode: number, readonly code: string, message: string, readonly details?: unknown) { super(message); } }
@@ -74,7 +75,8 @@ export async function makeServer(options:{store?:StateStore;logger?:boolean;tast
   const allowed=new Set((process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173,http://localhost:3001,http://127.0.0.1:5173,http://127.0.0.1:3001').split(',').map(s=>s.trim()).filter(Boolean));
   await app.register(cookie);
   await app.register(cors,{origin:(origin,cb)=>cb(null,!origin||allowed.has(origin)),credentials:true,methods:['GET','POST','PUT','PATCH','OPTIONS']});
-  await app.register(rateLimit,{max:120,timeWindow:'1 minute',keyGenerator:request=>request.ip});
+  const webRoot=resolveWebRoot();
+  await app.register(rateLimit,{max:120,timeWindow:'1 minute',keyGenerator:request=>request.ip,allowList:request=>!!webRoot&&isWebPath(request.url)});
   let store=options.store;
   if(!store && process.env.DATABASE_URL) {const pg=new PostgresStore(process.env.DATABASE_URL,()=>createInitialState('postgres'));await pg.migrate();store=pg;}
   store??=new MemoryStore(()=>createInitialState('memory'));
@@ -93,7 +95,7 @@ export async function makeServer(options:{store?:StateStore;logger?:boolean;tast
     return payload;
   });
   app.addHook('onRequest',async(req,reply)=>{
-    if(req.url==='/healthz')return;
+    if(req.url==='/healthz'||(webRoot&&isWebPath(req.url)))return;
     const origin=req.headers.origin;
     if(origin && !allowed.has(origin))throw new ApiError(403,'ORIGIN_DENIED','This Origin is not in the server allowlist');
     if(req.method!=='GET'&&req.method!=='OPTIONS'&&!origin&&req.headers['sec-fetch-site']==='cross-site')throw new ApiError(403,'CSRF_BLOCKED','Cross-site mutation requires an allowed Origin');
@@ -261,5 +263,6 @@ export async function makeServer(options:{store?:StateStore;logger?:boolean;tast
     }
     s.evaluations.push(evaluation);return s;
   }));
+  if(webRoot)registerWebHost(app,webRoot);
   return app;
 }

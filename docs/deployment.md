@@ -2,6 +2,18 @@
 
 These are optional setup instructions, not a deployment record. No account, repository, hosting service, database or paid subscription is created by unpacking this project. Check the provider's current terms, availability and price before provisioning. Live Qloo behavior remains unverified until the feasibility probe succeeds with the intended account.
 
+## Deploy to Render in 5 steps (single service, recommended)
+
+The API container also serves the built web bundle, so the browser talks to one origin: no CORS, no third-party cookies, `SameSite=Lax` works.
+
+1. Push the repository to GitHub (or GitLab).
+2. In Render choose **New → Blueprint**, select the repository; it reads `render.yaml` (one Docker web service, free plan, health check `/healthz`).
+3. When prompted, set the secret **`QLOO_API_KEY`** (optional; without it the live Qloo gate stays UNVERIFIED and Demo mode still works). Leave `ALLOWED_ORIGINS` blank for now.
+4. After the first deploy, copy the service URL (for example `https://rights-and-resonance.onrender.com`), set **`ALLOWED_ORIGINS`** to exactly that URL (no path, no trailing slash) and redeploy.
+5. Open the URL: generate, approve, withdraw rights, approve the repair. Then tick the [hosted acceptance checklist](#9-hosted-acceptance-checklist).
+
+Notes: `COOKIE_SECURE=true` and `COOKIE_SAME_SITE=lax` are preset. Web serving is automatic when `apps/web/dist` exists (the Docker image builds it); `SERVE_WEB=true` makes a missing bundle a startup error, `SERVE_WEB=false` turns it off. Static files get long-cache headers when hashed and `no-cache` for `index.html`; unknown non-`/api` paths fall back to the SPA. Free instances spin down when idle (first request is slow) and keep state in memory only, so state resets on restart; add `DATABASE_URL` for persistence. This path has been verified locally with `pnpm build` and `SERVE_WEB=true`, not on a live Render account; record your own result. If you run the harness behind an egress proxy that re-signs TLS (not the case on Render), it needs `NODE_EXTRA_CA_CERTS` pointing to the proxy CA bundle.
+
 ## 1. Local baseline
 
 Use Node 22.19.0+ and pnpm 10.18.3 from the repository root:
@@ -25,7 +37,9 @@ Before hosting, run `pnpm test`, `pnpm typecheck` and `pnpm build`. Run the brow
 | `NODE_ENV` | API | Set `production` on a hosted service |
 | `ALLOWED_ORIGINS` | API | Comma-separated exact browser origins, including scheme and port where applicable, with no path or trailing slash |
 | `COOKIE_SECURE` | API | `true` on HTTPS deployments; `false` only for local HTTP |
-| `COOKIE_SAME_SITE` | API | `lax` for local/same-site; `none` for genuinely cross-site requests, with Secure enabled |
+| `COOKIE_SAME_SITE` | API | `lax` for local/same-site/single-origin; `none` only for genuinely cross-site requests, with Secure enabled |
+| `SERVE_WEB` | API | Unset: serve `apps/web/dist` if it exists. `true`: require it. `false`: API only |
+| `WEB_DIST_DIR` | API | Optional override of the bundle directory |
 | `DATABASE_URL` | API | Optional PostgreSQL connection string; absent means ephemeral in-memory state |
 | `QLOO_API_KEY` | API/probe only | Explicit event key, held as a private environment secret; separate harness configuration is not adopted |
 | `QLOO_TRANSPORT` | API/probe | `harness` by default; `direct-http` only when explicitly selected, never a fallback |
@@ -85,17 +99,16 @@ After configuration:
 
 The startup migration is not a release-migration framework. Future schema changes should get separately reviewed, ordered migrations and rollback/recovery plans. Do not claim database deployment was tested unless the exact database-backed restart scenario was actually run.
 
-## 5. API Docker image
+## 5. Docker image (API + web)
 
 From the project root:
 
 ```sh
-docker build -t rights-and-resonance-api .
-docker run --rm -p 3001:3001 --env-file .env rights-and-resonance-api
+docker build -t rights-and-resonance .
+docker run --rm -p 3001:3001 --env-file .env rights-and-resonance
 ```
 
-The image runs as a non-root user, includes the pinned Qloo harness through workspace dependencies, exposes the API, and probes `/healthz`. The Qloo child process runs in the same server environment; it is not deployed in the static frontend. Missing private Qloo credentials keep live evidence unavailable. It intentionally includes TypeScript source and `tsx` because workspace package exports point to source. Development dependencies have not been aggressively pruned; review image size, dependency vulnerabilities and runtime policy before production use. The image does **not** serve the frontend.
-
+The image builds the web bundle and serves it with the API from one origin (open `http://localhost:3001`; add that origin to `ALLOWED_ORIGINS`). It runs as a non-root user, includes the pinned Qloo harness through workspace dependencies, and probes `/healthz`. The Qloo child process runs in the same server environment; it is not deployed in the static frontend. Missing private Qloo credentials keep live evidence unavailable. It intentionally includes TypeScript source and `tsx` because workspace package exports point to source. Development dependencies have not been aggressively pruned; review image size, dependency vulnerabilities and runtime policy before production use.
 `.dockerignore` excludes `.env`, provider reports, local dependency folders and browser test output. Service secrets should be injected at runtime, not passed through Docker build arguments. If a local database runs on your host, a container's `localhost` points to the container, not the host; configure an appropriate database hostname for your platform.
 
 ## 6. Cloudflare Pages frontend
@@ -119,11 +132,11 @@ Use the repository-root `Dockerfile` as the build source and the root directory 
 
 Set the API variables from sections 2–3 in private service configuration. Add `DATABASE_URL` if you want persistent history. Start with one instance. Set the resulting HTTPS API origin as the frontend's `VITE_API_BASE_URL`, rebuild the web bundle, and then perform the acceptance checks below.
 
-## 8. Render API alternative
+## 8. Render details
 
-`render.yaml` is an API-only Docker blueprint. It configures `/healthz`, one instance, secure cross-site cookies and a prompt for `ALLOWED_ORIGINS`. It intentionally does not provision a database or bake in provider keys. It selects `QLOO_TRANSPORT=harness` and the hackathon origin. Add optional secrets in the service dashboard and select an appropriate plan yourself; provisioning can incur charges.
+`render.yaml` is a single-service Docker blueprint (see the 5-step guide above). It configures the free plan, `/healthz`, one instance, secure same-origin cookies (`COOKIE_SAME_SITE=lax`), `QLOO_API_KEY` as a dashboard secret and a prompt for `ALLOWED_ORIGINS` (the service's own URL). Sections 6 and 7 describe the split-host fallback. It intentionally does not provision a database or bake in provider keys. It selects `QLOO_TRANSPORT=harness` and the hackathon origin. Add optional secrets in the service dashboard and select an appropriate plan yourself; provisioning can incur charges.
 
-Review the current [Render Blueprint reference](https://render.com/docs/blueprint-spec) before applying the file. If using same-site custom domains, change the cookie setting to the appropriate value before testing. With no database secret, the service is an ephemeral demo and loses its state on restart/redeploy.
+Review the current [Render Blueprint reference](https://render.com/docs/blueprint-spec) before applying the file. With no database secret, the service is an ephemeral demo and loses its state on restart/redeploy.
 
 ## 9. Hosted acceptance checklist
 
