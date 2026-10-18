@@ -8,7 +8,7 @@ The API container also serves the built web bundle, so the browser talks to one 
 
 1. Push the repository to GitHub (or GitLab).
 2. In Render choose **New → Blueprint**, select the repository; it reads `render.yaml` (one Docker web service, free plan, health check `/healthz`).
-3. When prompted, set the secret **`QLOO_API_KEY`** (optional; without it the live Qloo gate stays UNVERIFIED and Demo mode still works). Leave `ALLOWED_ORIGINS` blank for now.
+3. When prompted, set the secret **`QLOO_API_KEY`** (optional; without it the live Qloo gate stays UNVERIFIED and Demo mode still works). Optionally also set the secret **`GEMINI_API_KEY`** to enable the in-app Programming agent (without it the agent page reports itself unavailable; see [agent.md](agent.md)). Leave `ALLOWED_ORIGINS` blank for now.
 4. After the first deploy, copy the service URL (for example `https://rights-and-resonance.onrender.com`), set **`ALLOWED_ORIGINS`** to exactly that URL (no path, no trailing slash) and redeploy.
 5. Open the URL: generate, approve, withdraw rights, approve the repair. Then tick the [hosted acceptance checklist](#9-hosted-acceptance-checklist).
 
@@ -41,6 +41,7 @@ Before hosting, run `pnpm test`, `pnpm typecheck` and `pnpm build`. Run the brow
 | `SERVE_WEB` | API | Unset: serve `apps/web/dist` if it exists. `true`: require it. `false`: API only |
 | `WEB_DIST_DIR` | API | Optional override of the bundle directory |
 | `DATABASE_URL` | API | Optional PostgreSQL connection string; absent means ephemeral in-memory state |
+| `GEMINI_API_KEY` | API only | Optional secret (set in the Render dashboard; `sync:false` in `render.yaml`) enabling the in-app Programming agent. Server-only, never `VITE_`. Optional `GEMINI_MODEL` (default `gemini-2.5-flash`), `AGENT_DAILY_LIMIT` (60/session/day). See [agent.md](agent.md) |
 | `QLOO_API_KEY` | API/probe only | Explicit event key, held as a private environment secret; separate harness configuration is not adopted |
 | `QLOO_TRANSPORT` | API/probe | `harness` by default; `direct-http` only when explicitly selected, never a fallback |
 | `QLOO_BASE_URL` | API/probe | Event endpoint, restricted to `https://hackathon.api.qloo.com`; set explicitly for standalone harness commands too |
@@ -134,7 +135,7 @@ Set the API variables from sections 2–3 in private service configuration. Add 
 
 ## 8. Render details
 
-`render.yaml` is a single-service Docker blueprint (see the 5-step guide above). It configures the free plan, `/healthz`, one instance, secure same-origin cookies (`COOKIE_SAME_SITE=lax`), `QLOO_API_KEY` as a dashboard secret and a prompt for `ALLOWED_ORIGINS` (the service's own URL). Sections 6 and 7 describe the split-host fallback. It intentionally does not provision a database or bake in provider keys. It selects `QLOO_TRANSPORT=harness` and the hackathon origin. Add optional secrets in the service dashboard and select an appropriate plan yourself; provisioning can incur charges.
+`render.yaml` is a single-service Docker blueprint (see the 5-step guide above). It configures the free plan, `/healthz`, one instance, secure same-origin cookies (`COOKIE_SAME_SITE=lax`), `QLOO_API_KEY` and `GEMINI_API_KEY` as dashboard secrets and a prompt for `ALLOWED_ORIGINS` (the service's own URL). Sections 6 and 7 describe the split-host fallback. It intentionally does not provision a database or bake in provider keys. It selects `QLOO_TRANSPORT=harness` and the hackathon origin. Add optional secrets in the service dashboard and select an appropriate plan yourself; provisioning can incur charges.
 
 Review the current [Render Blueprint reference](https://render.com/docs/blueprint-spec) before applying the file. With no database secret, the service is an ephemeral demo and loses its state on restart/redeploy.
 

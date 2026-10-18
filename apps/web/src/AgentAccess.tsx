@@ -37,7 +37,7 @@ function Snippet({ title, hint, children }: { title: string; hint?: string; chil
 }
 
 /** "Agent access": how existing agents (Claude Code, Claude Desktop, any MCP client) use this app's Qloo-backed tools. */
-export function AgentAccessPanel({ onCopied }: { onCopied: (message: string) => void }) {
+export function AgentAccessPanel({ onCopied, onOpenChat }: { onCopied: (message: string) => void; onOpenChat: () => void }) {
   const url = `${window.location.origin}/mcp`;
   const json = JSON.stringify({ mcpServers: { 'rights-resonance': { type: 'http', url } } }, null, 2);
   const stdio = JSON.stringify({ mcpServers: { 'rights-resonance': { command: 'pnpm', args: ['--silent', '--dir', '/path/to/rights-and-resonance', 'mcp'], env: { QLOO_API_KEY: 'optional: enables live Qloo mode' } } } }, null, 2);
@@ -74,10 +74,10 @@ export function AgentAccessPanel({ onCopied }: { onCopied: (message: string) => 
       <p className="agent-guardrail"><ShieldCheck />Guardrails: the solver, not the model, picks films; approval is a separate human decision the agent must ask you for; rights and fees are synthetic; the Qloo key stays on the server.</p>
     </section>
 
-    {/* In-app agent chat mounts here (next step). It reuses the same tool registry the MCP server exposes. */}
-    <section className="agent-chat-slot" id="agent-chat" aria-label="In-app agent chat">
-      <div className="mini-heading"><Bot />In-app agent</div>
-      <p>An agent chat will live here: ask for a season in plain language and watch it call the same tools listed above.</p>
+    <section className="agent-chat-slot" id="agent-chat" aria-label="In-app agent">
+      <div className="mini-heading"><Bot />Rather not set anything up?</div>
+      <p>The workstation has its own Programming agent, powered by Gemini function calling over the same ten tools. Ask for a season in plain language and watch each tool call.</p>
+      <button className="button primary" onClick={onOpenChat}><Bot />Open the Programming agent</button>
     </section>
   </div>;
 }

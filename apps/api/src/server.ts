@@ -15,6 +15,7 @@ import { ApiError, applyChange, approveVersion, findVersion, getCohort, getFilm,
 import { createTasteSource, type TasteDnaSource } from './taste.js';
 import { collectAffinities, qloo, recordEvidence, EvidenceCollectionError } from './evidence.js';
 import { registerMcpRoutes, isMcpPath } from './mcp-http.js';
+import { registerAgentRoutes, AgentHttpError, type GenerateFn } from './agent-chat.js';
 import { registerWebHost, resolveWebRoot, isWebPath } from './static.js';
 import type { AppState, ProgrammeEvent, ProgrammeVersion, EvidenceMode } from './types.js';
 
@@ -48,7 +49,7 @@ function bodyObject(req:FastifyRequest):Record<string,unknown> {return z.record(
 function sessionId(req:FastifyRequest) {return (req as FastifyRequest & {rrSession:string}).rrSession;}
 function param(req:FastifyRequest,key:string) {return z.record(idSchema).parse(req.params)[key]!;}
 
-export async function makeServer(options:{store?:StateStore;logger?:boolean;taste?:TasteDnaSource}={}) {
+export async function makeServer(options:{store?:StateStore;logger?:boolean;taste?:TasteDnaSource;agentGenerate?:GenerateFn;agentConfig?:Partial<import('./agent-chat.js').AgentConfig>}={}) {
   const app=Fastify({logger:options.logger ?? false,bodyLimit:256*1024,trustProxy:false});
   const allowed=new Set((process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173,http://localhost:3001,http://127.0.0.1:5173,http://127.0.0.1:3001').split(',').map(s=>s.trim()).filter(Boolean));
   await app.register(cookie);
@@ -90,6 +91,7 @@ export async function makeServer(options:{store?:StateStore;logger?:boolean;tast
   });
   app.setErrorHandler((error,_req,reply)=>{
     if(error instanceof ZodError) return reply.status(400).send({error:'INVALID_REQUEST',message:'Request validation failed',details:error.issues});
+    if(error instanceof AgentHttpError)return reply.status(error.statusCode).send({error:error.code,message:error.message,...error.extra});
     if(error instanceof ApiError)return reply.status(error.statusCode).send({error:error.code,message:error.message,details:error.details});
     if(error instanceof QlooError) return reply.status(error.code==='NOT_CONFIGURED'?503:502).send({error:`QLOO_${error.code}`,message:error.message,details:{httpStatus:error.httpStatus,retryable:error.retryable,...error.metadata}});
     const status=error instanceof Error && 'statusCode' in error && typeof error.statusCode==='number' ? error.statusCode : 500;
@@ -235,6 +237,7 @@ export async function makeServer(options:{store?:StateStore;logger?:boolean;tast
     s.evaluations.push(evaluation);return s;
   }));
   registerMcpRoutes(app,tasteSource);
+  registerAgentRoutes(app,{ctxFor:sid=>({sessionId:sid,store:data,taste:tasteSource}),sessionOf:sessionId,generate:options.agentGenerate,config:options.agentConfig});
   if(webRoot)registerWebHost(app,webRoot);
   return app;
 }

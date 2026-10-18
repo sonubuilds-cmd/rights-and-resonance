@@ -21,6 +21,7 @@
 .agent-tools code{font-family:var(--mono);font-size:11px;color:var(--ink);font-weight:500}
 .agent-guardrail{display:flex;gap:8px;align-items:flex-start;margin:14px 0 0;padding-top:12px;border-top:1px dashed var(--line);font-size:11px;line-height:1.6;color:var(--muted)}
 .agent-guardrail svg{width:15px;height:15px;flex:none;color:var(--green);margin-top:2px}
+.agent-chat-slot .button{margin-top:14px}
 .agent-chat-slot{border:1.5px dashed #b9c1ac;background:linear-gradient(135deg,#f9f7ee,#eef0e2);border-radius:3px;padding:20px 22px;min-height:120px}
 .agent-chat-slot p{margin:8px 0 0;font-size:12px;color:var(--muted);line-height:1.6;max-width:60ch}
 @media(max-width:720px){.agent-banner{padding:16px}.agent-banner-main>svg{width:24px;height:24px}.agent-banner h2{font-size:23px}.agent-code{flex-direction:column}.agent-code .button{align-self:flex-end}}

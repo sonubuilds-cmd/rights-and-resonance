@@ -58,3 +58,5 @@ Prompts: `plan_season` (optional `focus`) and `handle_rights_change` (`film`).
 * `apps/api/src/mcp-server.ts`: `createAgentMcpServer(ctx)` wires the registry and prompts into `@modelcontextprotocol/sdk`.
 * `apps/api/src/mcp-http.ts`: `/mcp` routes and the bounded session manager. `apps/api/src/mcp-stdio.ts`: stdio entry.
 * Tests: `tests/integration/mcp.test.ts` (in-memory and real HTTP clients, hermetic DEMO mode).
+
+The in-app Programming agent uses this same registry through Gemini function calling instead of MCP; see [agent.md](agent.md).

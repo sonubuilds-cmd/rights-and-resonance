@@ -6,5 +6,5 @@ export default defineConfig({
   use: {baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:5173', trace: 'retain-on-failure'},
   projects: [{name:'chromium',use:{...devices['Desktop Chrome'],...(executablePath?{launchOptions:{executablePath}}:{})}}],
   // The synthetic spec must be deterministic: never inherit a developer's or CI's real Qloo key. An empty value also wins over .env files.
-  webServer: {command:'pnpm --dir ../.. dev',url:'http://127.0.0.1:5173',reuseExistingServer:!process.env.CI,timeout:60_000,env:{QLOO_API_KEY:'',TASTE_SOURCE:'synthetic'}},
+  webServer: {command:'pnpm --dir ../.. dev',url:'http://127.0.0.1:5173',reuseExistingServer:!process.env.CI,timeout:60_000,env:{QLOO_API_KEY:'',TASTE_SOURCE:'synthetic',GEMINI_API_KEY:'',AGENT_FAKE_MODEL:''}},
 });

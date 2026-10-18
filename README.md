@@ -50,6 +50,10 @@ claude mcp add rights-resonance -- pnpm --silent --dir "$PWD" mcp
 
 Then ask: *Plan a two-night season at the Lantern for our three audiences, explain each pick with Qloo themes, then tell me what happens if the rights to Her fall through.* The web app's **Agent access** page has copy-ready snippets. Ten tools and two prompts, guardrails and server limits are documented in [docs/mcp.md](docs/mcp.md).
 
+## In-app Programming agent (Gemini)
+
+The **Programming agent** page is a chat built on Gemini function calling over the *same* ten-tool registry as the MCP server. Ask it to plan the season, explain picks in Qloo themes, or repair the programme when rights fall through; every tool call is shown with its Qloo or demo provenance. The agent can *request* approval but only your **Confirm approval** click records it (enforced server-side). It needs `GEMINI_API_KEY` (server-only; optional `GEMINI_MODEL`, `AGENT_DAILY_LIMIT`); without it the page says the agent is unavailable and points to MCP. Design, limits, safety and data-use notes: [docs/agent.md](docs/agent.md).
+
 ## Evidence modes
 
 - **DEMO:** complete, explicitly synthetic affinity matrix and rights ledger. Useful for exercising the actual optimiser and workflow without network calls.

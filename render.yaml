@@ -24,6 +24,11 @@ services:
       # Secret: paste in the Render dashboard. Omit it and the live Qloo gate stays UNVERIFIED.
       - key: QLOO_API_KEY
         sync: false
+      # Secret: enables the in-app Programming agent (Gemini function calling). Omit it and the agent page says
+      # "unavailable on this deployment" and points to MCP. Free-tier Gemini may use prompts to improve products;
+      # only synthetic programme data and Qloo aggregates are sent. See docs/agent.md.
+      - key: GEMINI_API_KEY
+        sync: false
       # The service's own public URL, e.g. https://rights-and-resonance.onrender.com
       # (scheme + host, no path or trailing slash). Same-origin requests carry this Origin.
       - key: ALLOWED_ORIGINS

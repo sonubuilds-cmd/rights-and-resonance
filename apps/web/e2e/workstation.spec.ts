@@ -61,3 +61,15 @@ test('mobile navigation, missing provider, and editor cancellation', async ({pag
   await expect(page.getByText(/Live Qloo is not configured/)).toBeVisible();
   await expect(page.getByRole('button',{name:'Generate programme',exact:true}).first()).toBeDisabled();
 });
+
+test('programming agent is reachable and degrades politely without a Gemini key', async ({page}) => {
+  await page.goto('/');
+  await page.getByRole('button',{name:'Ask the agent',exact:true}).click();
+  await expect(page.getByRole('heading',{name:'Programming agent',exact:true})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'Agent unavailable on this deployment'})).toBeVisible();
+  await page.getByRole('button',{name:'Connect your own agent via MCP'}).click();
+  await expect(page.getByRole('heading',{name:/Bring your own agent/})).toBeVisible();
+  await expect(page.getByLabel('MCP URL',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Open the Programming agent'}).click();
+  await expect(page.locator('#agent-chat')).toBeVisible();
+});
