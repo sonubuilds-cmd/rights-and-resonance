@@ -1,0 +1,88 @@
+/* Judge-review polish: toasts, mobile action bar, guided start, repair diff, evidence policy, tab fades. */
+
+/* 1. Toast lives in the masthead (desktop) or inside the mobile action bar; it never covers content. */
+.toast.toast-top{position:static;transform:none;bottom:auto;flex:1 1 auto;max-width:460px;min-width:0;margin:0 auto;padding:9px 14px;line-height:1.45;animation:toast-in .25s ease-out}
+.toast.toast-top span{min-width:0}
+.toast.toast-top .icon-button{margin-left:auto;flex:none}
+@keyframes toast-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.mobile-nav-wrap,.mobile-bar{display:none}
+
+/* 4. Guided empty state */
+.guided-start{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:28px;align-items:center;border:1px solid #cfd5c3;background:linear-gradient(135deg,#f9f7ee,#eef0e2);border-radius:4px;padding:26px 28px;margin:0 0 6px}
+.guided-start .eyebrow{color:var(--accent);margin-bottom:8px}
+.guided-start h3{font-family:var(--serif);font-weight:400;font-size:32px;line-height:1.1;margin:0 0 10px;letter-spacing:-.01em}
+.guided-start p{font-size:12px;line-height:1.7;color:#5f645a;margin:0 0 18px;max-width:440px;min-height:0}
+.button.big{min-height:46px;padding:12px 22px;font-size:12px}
+.guided-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px;counter-reset:s}
+.guided-steps li{display:flex;gap:14px;align-items:center}
+.guided-steps b{flex:none;width:30px;height:30px;border-radius:50%;border:1px solid #b9c1ac;display:grid;place-items:center;font-family:var(--serif);font-weight:400;font-size:17px;color:var(--accent);background:var(--white)}
+.guided-steps strong{display:block;font-size:12px;font-weight:600}
+.guided-steps span{font-size:11px;color:var(--muted)}
+.programme-list .programme-row.is-empty{padding:16px 0;opacity:.72}
+.programme-list .programme-row.is-empty .film-title.empty{font-size:22px}
+.programme-list .programme-row.is-empty .slot-explanation,.programme-list .programme-row.is-empty .slot-empty-line{display:none}
+.summary-panel .panel-hint{font-size:10px;color:#a3ad99;margin:16px 0 0;text-align:center}
+.title-meta{display:flex;align-items:center;gap:12px}
+.section-title .title-meta .badge{font-size:8px}
+
+/* 3. Repair diff */
+.diff-row.unchanged{opacity:.6}
+.diff-row.changed{background:#f8e9e0;margin:0 -12px;padding-left:12px;padding-right:12px;border-left:3px solid var(--accent)}
+.diff-panel.after .diff-row.changed{background:#e1ebd3;border-left-color:var(--green)}
+.diff-panel.after .diff-row.changed span{color:var(--green)}
+.swap-tag{font-style:normal;font-family:var(--mono);font-size:8px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);white-space:nowrap}
+.diff-panel.after .swap-tag{color:var(--green)}
+.diff-callout{margin-top:24px;border:1px solid #e3c9bb;background:#faf0e8;border-radius:3px;padding:16px 20px}
+.diff-callout .eyebrow{margin-bottom:8px}
+.diff-callout p{margin:6px 0 0;font-size:13px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-height:0}
+.diff-callout .from{text-decoration:line-through;color:var(--muted)}
+.diff-callout strong{font-family:var(--serif);font-weight:400;font-size:20px;color:var(--green)}
+.diff-callout small{font-family:var(--mono);font-size:9px;color:var(--muted)}
+.moved-row td{background:#faf4df}
+.held-note{font-size:10px;color:var(--muted);margin:12px 0 0}
+
+/* 5. Evidence policy card */
+.policy-card{display:grid;grid-template-columns:1.6fr 1fr;border:1px solid var(--line);background:#eeefe5;border-radius:3px;margin-top:29px}
+.policy-card>div{padding:20px 22px}
+.policy-side{border-left:1px solid var(--line);display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+.policy-card h3{font-family:var(--serif);font-weight:400;font-size:22px;margin:0 0 10px}
+.policy-card ul{margin:0;padding-left:16px;font-size:10.5px;line-height:1.7;color:#5f645a}
+.policy-card li{margin-bottom:4px}
+.policy-card li b{color:var(--ink);font-weight:600}
+.policy-card .mini-heading{font-size:8px;letter-spacing:.08em;text-transform:uppercase;font-family:var(--mono);display:flex;align-items:center;gap:6px;margin-bottom:10px;color:#727969}
+.policy-card .mini-heading svg{width:12px;height:12px}
+.policy-badges{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+
+@media(max-width:900px){.toast.toast-top{max-width:300px;font-size:10px}}
+@media(max-width:720px){
+  .toast.toast-top{display:none}
+  .guided-start{grid-template-columns:1fr;padding:20px;gap:20px}
+  .guided-start h3{font-size:28px}
+  .guided-start .button.big{width:100%}
+  .policy-card{grid-template-columns:1fr}
+  .policy-side{border-left:0;border-top:1px solid var(--line)}
+  .main{padding-bottom:110px}
+  .summary-panel .panel-primary,.desk-only{display:none}
+  .diff-row.changed{margin:0 -8px;padding-left:9px;padding-right:9px}
+
+  /* scrollable tab bar with fade affordances */
+  .mobile-nav-wrap{display:block;position:sticky;top:0;z-index:30;background:#f4f1e9fa;border-bottom:1px solid var(--line)}
+  .mobile-nav-wrap .mobile-nav{position:static;border-bottom:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:0 8px}
+  .mobile-nav-wrap .mobile-nav::-webkit-scrollbar{display:none}
+  .mobile-nav-wrap:before,.mobile-nav-wrap:after{content:"";position:absolute;top:0;bottom:0;width:34px;pointer-events:none;z-index:2;opacity:0;transition:opacity .15s}
+  .mobile-nav-wrap:before{left:0;background:linear-gradient(90deg,#f4f1e9,#f4f1e900)}
+  .mobile-nav-wrap:after{right:0;background:linear-gradient(270deg,#f4f1e9,#f4f1e900)}
+  .mobile-nav-wrap.fade-left:before,.mobile-nav-wrap.fade-right:after{opacity:1}
+
+  /* sticky action bar */
+  .mobile-bar{display:block;position:fixed;left:0;right:0;bottom:0;z-index:60;background:#f7f4ecf5;backdrop-filter:blur(8px);border-top:1px solid var(--line);box-shadow:0 -6px 20px #28342314;padding-bottom:env(safe-area-inset-bottom)}
+  .toast-strip{display:flex;align-items:center;gap:10px;padding:9px 16px;background:#eef3e4;border-bottom:1px solid #cfdcc0;color:#3e5833;font-size:11px;line-height:1.4}
+  .toast-strip svg{width:14px;height:14px;flex:none}
+  .toast-strip span{flex:1;min-width:0}
+  .mobile-bar-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px}
+  .bar-summary{min-width:0}
+  .bar-summary strong{display:block;font-family:var(--serif);font-weight:400;font-size:24px;line-height:1}
+  .bar-summary strong span{font-family:var(--mono);font-size:9px;color:var(--muted)}
+  .bar-summary small{display:block;font-size:9px;color:var(--muted);margin-top:4px}
+  .mobile-bar-row .button{flex:none;min-height:44px;padding:0 18px;font-size:12px}
+}
